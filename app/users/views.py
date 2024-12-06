@@ -36,13 +36,18 @@ def auth(request):
     if response.status_code == 200:
         data = response.json()
         employee_id_number = data['employee_id_number']
-        if AllowedTeachers.objects.filter(teacher__hemis_id=employee_id_number).exists():
+        print(AllowedTeachers.objects.filter(teacher__employee_id_number=employee_id_number))
+
+        if AllowedTeachers.objects.filter(teacher__employee_id_number=employee_id_number).exists():
+            is_voter = AllowedTeachers.objects.get(teacher__employee_id_number=employee_id_number)
             if CustomUser.objects.filter(hemis_id=employee_id_number).exists():
                 user = CustomUser.objects.get(hemis_id=employee_id_number)
                 if user is not None:
                     login(request, user)
-                    print("user exist")
-                    return redirect('teachers:webapp')
+                    if is_voter.voter:
+                        return redirect('teachers:webapp')
+                    else:
+                        return redirect('teachers:table_result')
                 else:
                     return JsonResponse({'error': 'HEMIS orqali kirishda xatolik. Xatolik kodi: 500'})
             else:
@@ -78,7 +83,10 @@ def auth(request):
 
                 if user is not None:
                     login(request, user)
-                    return redirect('teachers:webapp')
+                    if is_voter.voter:
+                        return redirect('teachers:webapp')
+                    else:
+                        return redirect('teachers:table_result')
                 else:
                     return JsonResponse({'error': 'HEMIS orqali kirishda xatolik. Xatolik kodi: 500'})
         else:

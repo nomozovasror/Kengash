@@ -2,8 +2,11 @@ import os
 import requests
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
+from django.db.models import Count, Q
 from django.shortcuts import render, redirect
+from django.views import View
 from telegram import Bot, Update
 from telegram.ext import Updater, CommandHandler, CallbackContext
 from django.http import JsonResponse, HttpResponse
@@ -180,7 +183,86 @@ def update_and_save_employee(request):
 
 @login_required()
 def webapp_view(request):
-    return render(request, 'index.html')
+    print(request.user.voted)
+    if request.user.voted:
+        return render(request, 'index.html')
+    else:
+        return redirect("teachers:result")
+
+
+def result(request):
+    return render(request, 'quiz-result.html')
+
+class TableResult(LoginRequiredMixin, View):
+    def get(self, request):
+        allowed_teachers_count = AllowedTeachers.objects.filter(voter=True).count()
+        unique_voters_count = CandidatesVotes.objects.values('voter').distinct().count()
+
+        candidates_types = request.GET.get('candidates_types')
+
+        if candidates_types:
+            candidates = Candidates.objects.filter(type__icontains=candidates_types)
+        else:
+            candidates = Candidates.objects.filter(type__icontains='dotsent')
+
+        candidates_votes = candidates.annotate(
+            yes_votes=Count('candidate_teacher__vote', filter=Q(candidate_teacher__vote='yes')),
+            no_votes=Count('candidate_teacher__vote', filter=Q(candidate_teacher__vote='no'))
+        )
+
+        passed_candidates = []
+        failed_candidates = []
+        for vote in candidates_votes:
+            percentage = round((vote.yes_votes / (vote.yes_votes + vote.no_votes)) * 100, 1)
+            if percentage >= 50.0:
+                passed_candidates.append({
+                    'candidate': vote,
+                    'percentage': percentage
+                })
+            else:
+                failed_candidates.append({
+                    'candidate': vote,
+                    'percentage': percentage
+                })
+
+        context = {
+            'allowed_teachers_count': allowed_teachers_count,
+            'voter_count': unique_voters_count,
+            'passed_candidates': passed_candidates,
+            'failed_candidates': failed_candidates,
+            'candidates_types': candidates_types,
+        }
+
+        return render(request, 'table.html', context=context)
+
+class StartQuiz(LoginRequiredMixin, View):
+
+    def get(self, request):
+        if request.user.voted:
+            candidates = Candidates.objects.all()
+            context = {
+                'candidates': candidates
+            }
+            return render(request, 'quiz-start.html', context=context)
+        else:
+            return redirect("teachers:result")
+    def post(self, request):
+        candidates = Candidates.objects.all()
+        user = request.user
+        if request.method == 'POST':
+            section_count = len([key for key in request.POST.keys() if key.startswith('arizachi')])
+            for i, candidate in zip(range(1, section_count + 1), candidates):
+                section_title = request.POST.get(f'arizachi{i}')
+                CandidatesVotes.objects.create(
+                    voter=user,
+                    candidate=candidate,
+                    vote=section_title
+                )
+                user.voted = False
+                user.save()
+
+
+        return redirect("teachers:result")
 
 
 

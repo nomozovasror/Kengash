@@ -1,5 +1,7 @@
 from django.db import models
 
+from users.models import CustomUser
+
 
 # Create your models here.
 class Gender(models.Model):
@@ -168,13 +170,19 @@ class Candidates(models.Model):
     teacher = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='candidate_teachers')
     type = models.CharField(max_length=100, choices=TYPE, default='dotsent')
 
+    def __str__(self):
+        return self.full_name
+
 
 class CandidatesVotes(models.Model):
     VOTE = [
         ('yes', 1),
         ('no', 0)
     ]
-    voter = models.ForeignKey(AllowedTeachers, on_delete=models.CASCADE, related_name='voter_teacher')
+    voter = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='voter_teacher')
     candidate = models.ForeignKey(Candidates, on_delete=models.CASCADE, related_name='candidate_teacher')
     vote = models.CharField(max_length=10, choices=VOTE, null=True)
+
+    def __str__(self):
+        return f"{self.candidate} {self.vote}"
 
