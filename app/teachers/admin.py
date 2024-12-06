@@ -16,6 +16,7 @@ admin.site.register(EmployeeStatus)
 admin.site.register(EmployeeType)
 admin.site.register(AllowedTeachers)
 admin.site.register(Candidates)
+admin.site.register(CandidatesVotes)
 
 
 @admin.register(Employee)

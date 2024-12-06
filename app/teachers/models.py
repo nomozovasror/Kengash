@@ -154,9 +154,6 @@ class AllowedTeachers(models.Model):
         return self.teacher.name
 
 
-
-
-
 class Candidates(models.Model):
     TYPE = [
         ('dotsent', 'dotsent'),
@@ -170,3 +167,14 @@ class Candidates(models.Model):
     equal = models.CharField(max_length=200)
     teacher = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='candidate_teachers')
     type = models.CharField(max_length=100, choices=TYPE, default='dotsent')
+
+
+class CandidatesVotes(models.Model):
+    VOTE = [
+        ('yes', 1),
+        ('no', 0)
+    ]
+    voter = models.ForeignKey(AllowedTeachers, on_delete=models.CASCADE, related_name='voter_teacher')
+    candidate = models.ForeignKey(Candidates, on_delete=models.CASCADE, related_name='candidate_teacher')
+    vote = models.CharField(max_length=10, choices=VOTE, null=True)
+
