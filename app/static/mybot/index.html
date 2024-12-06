@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Web App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <h1>Assalomu alaykum!</h1>
+    <p>Bu Telegram Web App misoli.</p>
+    <button id="send">Telegramga yuborish</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Ilovani kengaytiradi
+        document.getElementById("send").addEventListener("click", () => {
+            tg.sendData("Salom! Bu ma'lumot botga yuborildi."); // Botga ma'lumot yuboradi
+        });
+    </script>
+</body>
+</html>
