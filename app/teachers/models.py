@@ -1,5 +1,6 @@
 from django.db import models
 
+
 # Create your models here.
 class Gender(models.Model):
     code = models.CharField(max_length=10, null=True)
@@ -8,12 +9,14 @@ class Gender(models.Model):
     def __str__(self):
         return self.name
 
+
 class AcademicDegree(models.Model):
     code = models.CharField(max_length=10)
     name = models.CharField(max_length=150)
 
     def __str__(self):
         return self.name
+
 
 class AcademicRank(models.Model):
     code = models.CharField(max_length=10)
@@ -22,6 +25,7 @@ class AcademicRank(models.Model):
     def __str__(self):
         return self.name
 
+
 class StructureType(models.Model):
     code = models.CharField(max_length=10)
     name = models.CharField(max_length=150)
@@ -29,12 +33,15 @@ class StructureType(models.Model):
     def __str__(self):
         return self.name
 
+
 class LocalityType(models.Model):
     code = models.CharField(max_length=10)
     name = models.CharField(max_length=150)
 
     def __str__(self):
         return self.name
+
+
 class Faculty(models.Model):
     hemis_id = models.IntegerField()
     code = models.CharField(max_length=10)
@@ -43,12 +50,15 @@ class Faculty(models.Model):
 
     def __str__(self):
         return self.name
+
+
 class EmploymentForm(models.Model):
     code = models.CharField(max_length=10)
     name = models.CharField(max_length=150)
 
     def __str__(self):
         return self.name
+
 
 class EmploymentStaff(models.Model):
     code = models.CharField(max_length=10)
@@ -57,12 +67,14 @@ class EmploymentStaff(models.Model):
     def __str__(self):
         return self.name
 
+
 class StaffPosition(models.Model):
     code = models.CharField(max_length=10)
     name = models.CharField(max_length=150)
 
     def __str__(self):
         return self.name
+
 
 class EmployeeStatus(models.Model):
     code = models.CharField(max_length=10)
@@ -71,12 +83,14 @@ class EmployeeStatus(models.Model):
     def __str__(self):
         return self.name
 
+
 class EmployeeType(models.Model):
     code = models.CharField(max_length=10)
     name = models.CharField(max_length=150)
 
     def __str__(self):
         return self.name
+
 
 class Department(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -139,3 +153,20 @@ class AllowedTeachers(models.Model):
     def __str__(self):
         return self.teacher.name
 
+
+
+
+
+class Candidates(models.Model):
+    TYPE = [
+        ('dotsent', 'dotsent'),
+        ('professor', 'professor')
+    ]
+    full_name = models.CharField(max_length=200)
+    birth_date = models.CharField(max_length=200)
+    shifr = models.CharField(max_length=200)
+    position = models.CharField(max_length=200)
+    year = models.CharField(max_length=200, null=True, blank=True)
+    equal = models.CharField(max_length=200)
+    teacher = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='candidate_teachers')
+    type = models.CharField(max_length=100, choices=TYPE, default='dotsent')
