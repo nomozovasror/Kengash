@@ -151,7 +151,7 @@ class AllowedTeachers(models.Model):
     voter = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.teacher
+        return self.teacher.full_name
 
 
 class Candidates(models.Model):
