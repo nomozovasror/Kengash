@@ -14,9 +14,17 @@ admin.site.register(EmploymentStaff)
 admin.site.register(StaffPosition)
 admin.site.register(EmployeeStatus)
 admin.site.register(EmployeeType)
-admin.site.register(AllowedTeachers)
-admin.site.register(Candidates)
 admin.site.register(CandidatesVotes)
+
+@admin.register(AllowedTeachers)
+class AllowedTeachersAdmin(admin.ModelAdmin):
+    raw_id_fields = ['teacher']  # Teacher maydoni uchun qidiruv oynasi
+    list_display = ['teacher', 'voter']
+
+
+@admin.register(Candidates)
+class CandidatesAdmin(admin.ModelAdmin):
+    raw_id_fields = ['teacher']
 
 
 @admin.register(Employee)

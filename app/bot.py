@@ -16,7 +16,7 @@ async def start(update, context):
         [
             InlineKeyboardButton(
                 "Web Appni ochish",
-                web_app={"url": "https://a779-5-133-123-107.ngrok-free.app/"}
+                web_app={"url": "https://bt.tersu.uz/"}
             )
         ]
     ]
