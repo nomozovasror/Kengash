@@ -15,13 +15,13 @@ async def start(update, context):
     keyboard = [
         [
             InlineKeyboardButton(
-                "Web Appni ochish",
+                "Boshlash uchun bosing!",
                 web_app={"url": "https://bt.tersu.uz/"}
             )
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Quyidagi tugma orqali Web Appni sinab ko'ring:", reply_markup=reply_markup)
+    await update.message.reply_text("Ilmiy unvonlarga tavsiya etish uchun quyidagi tugmani bosing va hemis login parol bilan identifikatsiyadan o'ting", reply_markup=reply_markup)
 
 
 if __name__ == "__main__":
