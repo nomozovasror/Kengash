@@ -193,29 +193,29 @@ def webapp_view(request):
 def result(request):
     return render(request, 'quiz-result.html')
 
-
 class TableResult(LoginRequiredMixin, View):
     def get(self, request):
-        try:
-            allowed_teachers_count = AllowedTeachers.objects.filter(voter=True).count()
-            unique_voters_count = CandidatesVotes.objects.values('voter').distinct().count()
+        allowed_teachers_count = AllowedTeachers.objects.filter(voter=True).count()
+        unique_voters_count = CandidatesVotes.objects.values('voter').distinct().count()
 
-            candidates_types = request.GET.get('candidates_types')
+        candidates_types = request.GET.get('candidates_types')
 
-            if candidates_types:
-                candidates = Candidates.objects.filter(type__icontains=candidates_types)
-            else:
-                candidates = Candidates.objects.filter(type__icontains='dotsent')
+        if candidates_types:
+            candidates = Candidates.objects.filter(type__icontains=candidates_types)
+        else:
+            candidates = Candidates.objects.filter(type__icontains='dotsent')
 
-            candidates_votes = candidates.annotate(
-                yes_votes=Count('candidate_teacher__vote', filter=Q(candidate_teacher__vote='yes')),
-                no_votes=Count('candidate_teacher__vote', filter=Q(candidate_teacher__vote='no'))
-            )
+        candidates_votes = candidates.annotate(
+            yes_votes=Count('candidate_teacher__vote', filter=Q(candidate_teacher__vote='yes')),
+            no_votes=Count('candidate_teacher__vote', filter=Q(candidate_teacher__vote='no'))
+        )
 
-            passed_candidates = []
-            failed_candidates = []
-            for vote in candidates_votes:
-                percentage = round((vote.yes_votes / (vote.yes_votes + vote.no_votes)) * 100, 1)
+        passed_candidates = []
+        failed_candidates = []
+        for vote in candidates_votes:
+            total_votes = vote.yes_votes + vote.no_votes
+            if total_votes > 0:
+                percentage = round((vote.yes_votes / total_votes) * 100, 1)
                 if percentage >= 50.0:
                     passed_candidates.append({
                         'candidate': vote,
@@ -226,18 +226,24 @@ class TableResult(LoginRequiredMixin, View):
                         'candidate': vote,
                         'percentage': percentage
                     })
+            else:
+                # Handle cases where no votes are present
+                failed_candidates.append({
+                    'candidate': vote,
+                    'percentage': 0.0  # Default to 0% when no votes exist
+                })
 
-            context = {
-                'allowed_teachers_count': allowed_teachers_count,
-                'voter_count': unique_voters_count,
-                'passed_candidates': passed_candidates,
-                'failed_candidates': failed_candidates,
-                'candidates_types': candidates_types,
-            }
+        context = {
+            'allowed_teachers_count': allowed_teachers_count,
+            'voter_count': unique_voters_count,
+            'passed_candidates': passed_candidates,
+            'failed_candidates': failed_candidates,
+            'candidates_types': candidates_types,
+        }
 
-            return render(request, 'table.html', context=context)
-        except ZeroDivisionError:
-            return render(request, 'info.html')
+        return render(request, 'table.html', context=context)
+
+
 
 class StartQuiz(LoginRequiredMixin, View):
 
