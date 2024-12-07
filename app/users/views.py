@@ -71,7 +71,7 @@ def auth(request):
                     last_name=last_name,
                     picture=picture,
                     short_name=short_name,
-                    full_name=f"{short_name} {third_name}",
+                    full_name=short_name,
                     third_name=third_name,
                     roles=roles,
                     active_role=roles[0]['name'],
