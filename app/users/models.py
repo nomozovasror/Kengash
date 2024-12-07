@@ -16,4 +16,4 @@ class CustomUser(AbstractUser):
     roles = models.JSONField(null=True)
     active_role = models.CharField(max_length=300, null=True)
     uuid = models.CharField(max_length=300, null=True, blank=True)
-    voted = models.BooleanField(default=False)
+    voted = models.BooleanField(default=True)

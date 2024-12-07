@@ -1,10 +1,5 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-import os
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-from telegram import Update
-
-DJANGO_URL = "http://127.0.0.1:8000/test/"  # Django server URL
-import requests
+from telegram.ext import ApplicationBuilder, CommandHandler
 
 BOT_TOKEN = '7381137526:AAFHH7nKHdRFMLaqxb8lmIMRfL-236xVKBY'
 
