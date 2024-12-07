@@ -57,7 +57,7 @@
                                         <tbody>
                                         {% for i in passed_candidates %}
                                             <tr>
-                                                <td>
+                                                <td class="px-0">
                                                     <div class="d-flex align-items-center gap-3">
                                                         <div class="avatar avatar-md">
                                                             <img alt="avatar" src="
@@ -66,7 +66,7 @@
                                                                     {% if i.candidate.teacher.image %}{{ i.candidate.teacher.image }}{% else %}{% static 'assets/images/default.webp' %}{% endif %}"
                                                                  class="rounded-circle"/>
                                                         </div>
-                                                        <h4>{{ i.candidate.teacher }}</h4>
+                                                        <h5>{{ i.candidate.teacher }}</h5>
                                                     </div>
                                                 </td>
                                                 <td>
