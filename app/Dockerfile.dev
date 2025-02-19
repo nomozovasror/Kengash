@@ -24,4 +24,3 @@ COPY . .
 RUN chown -R kengash:app /app
 USER kengash
 ENTRYPOINT ["sh", "/app/entrypoint.dev.sh"]
-CMD ["python", "bot.py"]

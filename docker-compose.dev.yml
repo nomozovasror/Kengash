@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   kengash_web:
     restart: always

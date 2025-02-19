@@ -1,8 +1,5 @@
 from django.db import models
 
-from users.models import CustomUser
-
-
 # Create your models here.
 class Gender(models.Model):
     code = models.CharField(max_length=10, null=True)
@@ -147,42 +144,22 @@ class Employee(models.Model):
     def __str__(self):
         return self.full_name
 
-
-class AllowedTeachers(models.Model):
-    teacher = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='allowed_teachers')
-    voter = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.teacher.full_name
-
-
-class Candidates(models.Model):
-    TYPE = [
-        ('dotsent', 'dotsent'),
-        ('professor', 'professor')
-    ]
-    full_name = models.CharField(max_length=200)
-    birth_date = models.CharField(max_length=200)
-    shifr = models.CharField(max_length=200)
-    position = models.CharField(max_length=200)
-    year = models.CharField(max_length=200, null=True, blank=True)
-    equal = models.CharField(max_length=200)
-    teacher = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='candidate_teachers')
-    type = models.CharField(max_length=100, choices=TYPE, default='dotsent')
+class SelectedEmployee(models.Model):
+    TYPE = (
+        ('professor', 'Professor'),
+        ('dotsent', 'Dotsent'),
+    )
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='selected_employee')
+    type = models.CharField(max_length=20, choices=TYPE)
 
     def __str__(self):
-        return self.full_name
+        return self.employee.full_name
 
 
-class CandidatesVotes(models.Model):
-    VOTE = [
-        ('yes', 1),
-        ('no', 0)
-    ]
-    voter = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='voter_teacher')
-    candidate = models.ForeignKey(Candidates, on_delete=models.CASCADE, related_name='candidate_teacher')
-    vote = models.CharField(max_length=10, choices=VOTE, null=True)
+class Vote(models.Model):
+    employee = models.ForeignKey(SelectedEmployee, on_delete=models.CASCADE, related_name='votes')
+    vote = models.BooleanField()
+    ip_address = models.GenericIPAddressField()
 
     def __str__(self):
-        return f"{self.candidate} {self.vote}"
-
+        return f"{self.employee.employee.full_name} - {'Yes' if self.vote else 'No'}"

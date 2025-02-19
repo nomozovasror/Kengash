@@ -1,11 +1,13 @@
 from django.urls import path
-from . import views
+from .views import *
 
 app_name = 'teachers'
 urlpatterns = [
-    path("update-employee/", views.update_and_save_employee, name='update_employee'),
-    path('', views.webapp_view, name='webapp'),
-    path('quiz/', views.StartQuiz.as_view(), name='start_quiz'),
-    path('result/', views.result, name='result'),
-    path('table-result/', views.TableResult.as_view(), name='table_result')
+    path("update-employee/", update_and_save_employee, name='update_employee'),
+    path('', home, name='home'),
+    path('finish/', finish_vote, name='finish_vote'),
+    path('start-vote/', start_vote, name='start_vote'),
+    path('vote/', VoteView.as_view(), name='vote'),
+    path('dashboard/', dashboard, name='dashboard'),
+
 ]

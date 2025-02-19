@@ -8,35 +8,6 @@
   <main>
     <section class="pt-5 pb-5">
       <div class="container">
-        <!-- User info -->
-        <div class="row align-items-center mb-2">
-          <div class="col-xl-12 col-lg-12 col-md-12 col-12">
-            <!-- Bg -->
-            <div class="rounded-top"
-              style="background: url({% static 'assets/images/background/profile-bg.jpg' %}) no-repeat; background-size: cover; height: 100px">
-            </div>
-            <div class="card px-4 pt-2 pb-4 shadow-sm rounded-top-0 rounded-bottom-0 rounded-bottom-md-2">
-              <div class="d-flex align-items-end justify-content-between">
-                <div class="d-flex align-items-center">
-                  <div class="me-2 position-relative d-flex justify-content-end align-items-end mt-n5">
-                    <img src="{{ request.user.picture }}"
-                      class="avatar-xl rounded-circle border border-4 border-white" alt="avatar" />
-                  </div>
-                  <div class="lh-1">
-                    <h2 class="mb-0">
-                      {{ request.user.full_name }}
-                    </h2>
-                    <p class="mb-0 d-block">{{ request.user.hemis_id }}</p>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Content -->
-
         <div class="row mt-0 mt-md-4">
           <div class="col-lg-3 col-md-4 col-12">
           </div>
@@ -49,7 +20,7 @@
                   <div class="mb-4">
                     <div><i class="fe fe-check fs-1 fw-bold text-success"></i></div>
                     <h2>Ovoz berish yakunlandi!</h2>
-                    <!-- <p class="mb-0 px-lg-8">You are successfully completed the quiz. Now you click on finish and back to your quiz page.</p> -->
+                    <p class="mb-0 px-lg-8">{{ ipaddress }}</p>
                   </div>
                   <!-- btn -->
                   <!-- <div class="mt-5">

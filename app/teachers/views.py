@@ -1,3 +1,4 @@
+import json
 import os
 import requests
 from django.contrib import messages
@@ -6,15 +7,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models import Count, Q
 from django.shortcuts import render, redirect
-from django.views import View
-from telegram import Bot, Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
 from django.http import JsonResponse, HttpResponse
-import json
 from .models import *
-
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
-
+from django.views import View
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 def clear_all_employee_departments():
     employees = Employee.objects.all()
@@ -24,7 +23,6 @@ def clear_all_employee_departments():
     print(f"Xodimlar uchun bo'llimlar tozalandi.")
 
 
-@login_required()
 @transaction.atomic()
 def update_and_save_employee(request):
     token = os.environ.get('HEMIS_TOKEN')
@@ -159,7 +157,7 @@ def update_and_save_employee(request):
                         return HttpResponse(e)
             else:
                 print(response.status_code)
-                return redirect('teachers:webapp')
+                return redirect('teachers:home')
 
         employee_api_ids = list(dict.fromkeys(employee_api_ids))
 
@@ -174,105 +172,93 @@ def update_and_save_employee(request):
                     messages.warning(request, e)
 
         messages.success(request, 'muvaffaqiyatli saqlandi')
-        return redirect('teachers:webapp')
+        return redirect('teachers:home')
 
     else:
         messages.error(request, f"get page count error. status code {get_page_count_response.status_code}")
-        return redirect('teachers:webapp')
+        return redirect('teachers:home')
 
-
-@login_required()
-def webapp_view(request):
-    print(request.user.voted)
-    if request.user.voted:
-        return render(request, 'index.html')
+def home(request):
+    selected_employees = SelectedEmployee.objects.all().exclude(votes__ip_address=request.META.get('REMOTE_ADDR'))
+    if selected_employees:
+        return render(request, 'start.html')
     else:
-        return redirect("teachers:result")
+        return redirect('teachers:finish_vote')
+
+def finish_vote(request):
+    forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+    if forwarded:
+        ip = forwarded.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return render(request, 'quiz-result.html', {'ipaddress': ip})
+
+def start_vote(request):
+    forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+    if forwarded:
+        ip = forwarded.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    selected_employees = SelectedEmployee.objects.all().exclude(votes__ip_address=ip)
+    if selected_employees:
+        return render(request, 'quiz-start.html', {'selected_employees': selected_employees})
+    else:
+        return redirect('teachers:finish_vote')
 
 
-def result(request):
-    return render(request, 'quiz-result.html')
-
-class TableResult(LoginRequiredMixin, View):
-    def get(self, request):
-        allowed_teachers_count = AllowedTeachers.objects.filter(voter=True).count()
-        unique_voters_count = CandidatesVotes.objects.values('voter').distinct().count()
-
-        candidates_types = request.GET.get('candidates_types')
-
-        if candidates_types:
-            candidates = Candidates.objects.filter(type__icontains=candidates_types)
-        else:
-            candidates = Candidates.objects.filter(type__icontains='dotsent')
-
-        candidates_votes = candidates.annotate(
-            yes_votes=Count('candidate_teacher__vote', filter=Q(candidate_teacher__vote='yes')),
-            no_votes=Count('candidate_teacher__vote', filter=Q(candidate_teacher__vote='no'))
-        )
-
-        passed_candidates = []
-        failed_candidates = []
-        for vote in candidates_votes:
-            total_votes = vote.yes_votes + vote.no_votes
-            if total_votes > 0:
-                percentage = round((vote.yes_votes / total_votes) * 100, 1)
-                if percentage >= 50.0:
-                    passed_candidates.append({
-                        'candidate': vote,
-                        'percentage': percentage
-                    })
-                else:
-                    failed_candidates.append({
-                        'candidate': vote,
-                        'percentage': percentage
-                    })
-            else:
-                # Handle cases where no votes are present
-                failed_candidates.append({
-                    'candidate': vote,
-                    'percentage': 0.0  # Default to 0% when no votes exist
-                })
-
-        context = {
-            'allowed_teachers_count': allowed_teachers_count,
-            'voter_count': unique_voters_count,
-            'passed_candidates': passed_candidates,
-            'failed_candidates': failed_candidates,
-            'candidates_types': candidates_types,
-        }
-
-        return render(request, 'table.html', context=context)
-
-
-
-class StartQuiz(LoginRequiredMixin, View):
-
-    def get(self, request):
-        if request.user.voted:
-            candidates = Candidates.objects.all()
-            context = {
-                'candidates': candidates
-            }
-            return render(request, 'quiz-start.html', context=context)
-        else:
-            return redirect("teachers:result")
+@method_decorator(csrf_exempt, name='dispatch')
+class VoteView(View):
     def post(self, request):
-        candidates = Candidates.objects.all()
-        user = request.user
-        if request.method == 'POST':
-            section_count = len([key for key in request.POST.keys() if key.startswith('arizachi')])
-            for i, candidate in zip(range(1, section_count + 1), candidates):
-                section_title = request.POST.get(f'arizachi{i}')
-                CandidatesVotes.objects.create(
-                    voter=user,
-                    candidate=candidate,
-                    vote=section_title
-                )
-                user.voted = False
-                user.save()
+        data = json.loads(request.body)
+        employee_id = data.get('employee_id')
+        vote = data.get('vote')
+        is_last = data.get('is_last')
+        if vote == 'yes':
+            vote_value = True
+        else:
+            vote_value = False
+
+        forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+        if forwarded:
+            ip_address = forwarded.split(',')[0]
+        else:
+            ip_address = request.META.get('REMOTE_ADDR')
+
+        selected_employee = get_object_or_404(SelectedEmployee, employee__employee_id_number=employee_id)
+
+        if Vote.objects.filter(employee=selected_employee, ip_address=ip_address).exists():
+            return JsonResponse({'success': False, 'message': "You have already voted.", })
+
+        Vote.objects.create(employee=selected_employee, vote=vote_value, ip_address=ip_address)
+        if is_last:
+            return JsonResponse({'success': True, 'message': "Your vote has been recorded.", 'is_last': True})
+
+        return JsonResponse({'success': True, 'message': "Your vote has been recorded."})
 
 
-        return redirect("teachers:result")
+def dashboard(request):
+    votes_count = Vote.objects.values('ip_address').distinct().count()
+    employees = SelectedEmployee.objects.all()
 
+    employees_result = []
+    for employee in employees:
+        employee_votes = Vote.objects.filter(employee=employee).count()
+        employee_true_votes = Vote.objects.filter(employee=employee, vote=True).count()
+        employee_false_votes = Vote.objects.filter(employee=employee, vote=False).count()
+        percentage = (employee_true_votes / employee_votes) * 100
+        employees_result.append({
+            'employee': employee,
+            'votes': employee_votes,
+            'true': employee_true_votes,
+            'false': employee_false_votes,
+            'percentage': percentage
+        })
+
+    context = {
+        'votes_count': votes_count,
+        'employees': employees_result
+    }
+
+    return render(request, 'table.html', context=context)
 
 
