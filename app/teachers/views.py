@@ -1,5 +1,7 @@
 import json
 import os
+import uuid
+
 import requests
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -22,6 +24,10 @@ def clear_all_employee_departments():
         employee.department.clear()
     print(f"Xodimlar uchun bo'llimlar tozalandi.")
 
+def get_session_id(request):
+    if 'device_id' not in request.session:
+        request.session['device_id'] = str(uuid.uuid4())
+    return request.session['device_id']
 
 @transaction.atomic()
 def update_and_save_employee(request):
@@ -179,27 +185,20 @@ def update_and_save_employee(request):
         return redirect('teachers:home')
 
 def home(request):
-    selected_employees = SelectedEmployee.objects.all().exclude(votes__ip_address=request.META.get('REMOTE_ADDR'))
+    session_id = get_session_id(request)
+    selected_employees = SelectedEmployee.objects.all().exclude(votes__session_id=session_id)
     if selected_employees:
         return render(request, 'start.html')
     else:
         return redirect('teachers:finish_vote')
 
 def finish_vote(request):
-    forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
-    if forwarded:
-        ip = forwarded.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return render(request, 'quiz-result.html', {'ipaddress': ip})
+
+    return render(request, 'quiz-result.html')
 
 def start_vote(request):
-    forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
-    if forwarded:
-        ip = forwarded.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    selected_employees = SelectedEmployee.objects.all().exclude(votes__ip_address=ip)
+    session_id = get_session_id(request)
+    selected_employees = SelectedEmployee.objects.all().exclude(votes__session_id=session_id)
     if selected_employees:
         return render(request, 'quiz-start.html', {'selected_employees': selected_employees})
     else:
@@ -218,26 +217,25 @@ class VoteView(View):
         else:
             vote_value = False
 
-        forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
-        if forwarded:
-            ip_address = forwarded.split(',')[0]
-        else:
-            ip_address = request.META.get('REMOTE_ADDR')
+        session_id = get_session_id(request)
 
         selected_employee = get_object_or_404(SelectedEmployee, employee__employee_id_number=employee_id)
 
-        if Vote.objects.filter(employee=selected_employee, ip_address=ip_address).exists():
+        if Vote.objects.filter(employee=selected_employee, session_id=session_id).exists():
             return JsonResponse({'success': False, 'message': "You have already voted.", })
 
-        Vote.objects.create(employee=selected_employee, vote=vote_value, ip_address=ip_address)
+        Vote.objects.create(employee=selected_employee, vote=vote_value, session_id=session_id)
         if is_last:
             return JsonResponse({'success': True, 'message': "Your vote has been recorded.", 'is_last': True})
 
         return JsonResponse({'success': True, 'message': "Your vote has been recorded."})
 
-
 def dashboard(request):
-    votes_count = Vote.objects.values('ip_address').distinct().count()
+    return render(request, 'table.html')
+
+
+def get_dashboard_data(request):
+    votes_count = Vote.objects.values('session_id').distinct().count()
     employees = SelectedEmployee.objects.all()
 
     employees_result = []
@@ -245,20 +243,18 @@ def dashboard(request):
         employee_votes = Vote.objects.filter(employee=employee).count()
         employee_true_votes = Vote.objects.filter(employee=employee, vote=True).count()
         employee_false_votes = Vote.objects.filter(employee=employee, vote=False).count()
-        percentage = (employee_true_votes / employee_votes) * 100
+        percentage = (employee_true_votes / employee_votes) * 100 if employee_votes > 0 else 0
+
+
         employees_result.append({
-            'employee': employee,
+            'name': str(employee.employee.full_name),
+            'image': str(employee.employee.image),
             'votes': employee_votes,
             'true': employee_true_votes,
             'false': employee_false_votes,
-            'percentage': percentage
+            'percentage': round(percentage, 2)
         })
 
-    context = {
-        'votes_count': votes_count,
-        'employees': employees_result
-    }
-
-    return render(request, 'table.html', context=context)
+    return JsonResponse({'votes_count': votes_count, 'employees': employees_result})
 
 

@@ -9,5 +9,5 @@ urlpatterns = [
     path('start-vote/', start_vote, name='start_vote'),
     path('vote/', VoteView.as_view(), name='vote'),
     path('dashboard/', dashboard, name='dashboard'),
-
+    path('api/dashboard-data/', get_dashboard_data, name='get_dashboard_data'),
 ]

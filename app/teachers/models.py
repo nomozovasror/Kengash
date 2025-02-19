@@ -159,7 +159,7 @@ class SelectedEmployee(models.Model):
 class Vote(models.Model):
     employee = models.ForeignKey(SelectedEmployee, on_delete=models.CASCADE, related_name='votes')
     vote = models.BooleanField()
-    ip_address = models.GenericIPAddressField()
+    session_id = models.UUIDField(null=True)
 
     def __str__(self):
         return f"{self.employee.employee.full_name} - {'Yes' if self.vote else 'No'}"

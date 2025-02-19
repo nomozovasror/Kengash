@@ -77,25 +77,25 @@
                                                     <div>
                                                         <div class="d-flex flex-column justify-content-between border-bottom py-2">
                                                             <h3>Tug‘ilgan yili: <span
-                                                                    class="text-bg-dark-secondary">{{ i.employee.birth_timestamp|timestamp_to_date }}</span>
+                                                                    class="text-secondary">{{ i.employee.birth_timestamp|timestamp_to_date }}</span>
                                                             </h3>
                                                         </div>
                                                         <div class="d-flex flex-column justify-content-between pt-2">
-                                                            <h3>Lavozimi:</h3>
-                                                            <span class="text-dark">{{ i.position }}</span>
+                                                            <h3>Lavozimi: <span class="text-secondary">{{ i.employee.department.first.employee_position }}</span></h3>
+
                                                         </div>
                                                         <div class="d-flex flex-column justify-content-between pt-2">
-                                                            <h3>Ilmiy daraja olgan yili:</h3>
-                                                            <span class="text-dark">{{ i.year }}</span>
+                                                            <h3>Ilmiy daraja: <span class="text-secondary">{{ i.employee.academicDegree }}</span></h3>
+
                                                         </div>
-                                                        <div class="d-flex flex-column justify-content-between pt-2">
-                                                            <h3>Hujjatlarining talab darajasida mosligi:</h3>
-                                                            <span class="text-dark">{{ i.equal }}</span>
-                                                        </div>
+{#                                                        <div class="d-flex flex-column justify-content-between pt-2">#}
+{#                                                            <h3>Hujjatlarining talab darajasida mosligi:</h3>#}
+{#                                                            <span class="text-dark">{{ i.equal }}</span>#}
+{#                                                        </div>#}
                                                     </div>
-                                                    <h4 class="mb-3 mt-1">{% if i.type == 'dotsent' %}Dotsentlik ilmiy
+                                                    <h2 class="mb-3 mt-4">{% if i.type == 'dotsent' %}Dotsentlik ilmiy
                                                         unvoni uchun{% else %}Professorlik ilmiy unvoni
-                                                        uchun{% endif %}</h4>
+                                                        uchun{% endif %}</h2>
 
                                                     <!-- buttons -->
                                                     <div class="d-grid mb-2 yes_btn" role="group"
