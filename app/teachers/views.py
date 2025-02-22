@@ -237,6 +237,11 @@ def dashboard(request):
 def get_dashboard_data(request):
     votes_count = Vote.objects.values('session_id').distinct().count()
     employees = SelectedEmployee.objects.all()
+    all_true = Vote.objects.filter(vote=True).count()
+    all_false = Vote.objects.filter(vote=False).count()
+
+    votes_list = [all_false, all_true]
+    print(votes_list)
 
     employees_result = []
     for employee in employees:
@@ -252,9 +257,13 @@ def get_dashboard_data(request):
             'votes': employee_votes,
             'true': employee_true_votes,
             'false': employee_false_votes,
-            'percentage': round(percentage, 2)
+            'percentage': round(percentage, 2),
         })
 
-    return JsonResponse({'votes_count': votes_count, 'employees': employees_result})
+    return JsonResponse({
+            'votes_count': votes_count,
+            'employees': employees_result,
+            'votes_list': votes_list,
+        })
 
 

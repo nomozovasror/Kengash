@@ -59,9 +59,11 @@
                                                         <a href="#"><img
                                                                 src="
 
+
                                                                         {% if i.employee.image %}{{ i.employee.image }}{% else %}{% static 'assets/images/default.webp' %}{% endif %}"
                                                                 alt="course"
-                                                                class="rounded img-4by3-lg"/></a>
+                                                                style="width: 150px"
+                                                                class="rounded"/></a>
                                                         <!-- quiz content -->
                                                         <div class="ms-3">
                                                             <h3 class="mb-0"><a href="#"
@@ -81,17 +83,25 @@
                                                             </h3>
                                                         </div>
                                                         <div class="d-flex flex-column justify-content-between pt-2">
-                                                            <h3>Lavozimi: <span class="text-secondary">{{ i.employee.department.first.employee_position }}</span></h3>
-
+                                                            <h3>Kafedra: <span
+                                                                    class="text-secondary">{{ i.employee.department.first.department }}</span>
+                                                            </h3>
                                                         </div>
                                                         <div class="d-flex flex-column justify-content-between pt-2">
-                                                            <h3>Ilmiy daraja: <span class="text-secondary">{{ i.employee.academicDegree }}</span></h3>
+                                                            <h3>Lavozimi: <span
+                                                                    class="text-secondary">{{ i.employee.department.first.employee_position }}</span>
+                                                            </h3>
+                                                        </div>
+                                                        <div class="d-flex flex-column justify-content-between pt-2">
+                                                            <h3>Ilmiy daraja: <span
+                                                                    class="text-secondary">{{ i.employee.academicDegree }}</span>
+                                                            </h3>
 
                                                         </div>
-{#                                                        <div class="d-flex flex-column justify-content-between pt-2">#}
-{#                                                            <h3>Hujjatlarining talab darajasida mosligi:</h3>#}
-{#                                                            <span class="text-dark">{{ i.equal }}</span>#}
-{#                                                        </div>#}
+                                                        {#                                                        <div class="d-flex flex-column justify-content-between pt-2">#}
+                                                        {#                                                            <h3>Hujjatlarining talab darajasida mosligi:</h3>#}
+                                                        {#                                                            <span class="text-dark">{{ i.equal }}</span>#}
+                                                        {#                                                        </div>#}
                                                     </div>
                                                     <h2 class="mb-3 mt-4">{% if i.type == 'dotsent' %}Dotsentlik ilmiy
                                                         unvoni uchun{% else %}Professorlik ilmiy unvoni
@@ -148,42 +158,42 @@
     <script src="{% static 'assets/js/vendors/beStepper.js' %}"></script>
     <script>
 
-function sendVote(id, is_last) {
-    let radioBtn = document.querySelector(`input[name="${id}"]:checked`);
-    if (radioBtn) {
-        let voteValue = radioBtn.value;
-        fetch("{% url 'teachers:vote' %}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": "{{ csrf_token }}"
-            },
-            body: JSON.stringify({
-                employee_id: id,
-                vote: voteValue,
-                is_last: is_last
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        function sendVote(id, is_last) {
+            let radioBtn = document.querySelector(`input[name="${id}"]:checked`);
+            if (radioBtn) {
+                let voteValue = radioBtn.value;
+                fetch("{% url 'teachers:vote' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify({
+                        employee_id: id,
+                        vote: voteValue,
+                        is_last: is_last
+                    })
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            console.log("Vote recorded successfully");
+                            if (data.is_last) {
+                                window.location.href = "{% url 'teachers:home' %}";
+                            }
+                        } else {
+                            console.log("Error recording vote:", data.message);
+                        }
+                    }).catch(error => {
+                    console.error("Error:", error);
+                });
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                console.log("Vote recorded successfully");
-                if (data.is_last) {
-                    window.location.href = "{% url 'teachers:home' %}";
-                }
-            } else {
-                console.log("Error recording vote:", data.message);
-            }
-        }).catch(error => {
-            console.error("Error:", error);
-        });
-    }
-}
+        }
 
         function checkRadio() {
             let questions = document.querySelectorAll(".question_block");
