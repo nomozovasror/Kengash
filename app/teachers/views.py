@@ -205,7 +205,7 @@ def finish_vote(request):
 
 def start_vote(request):
     session_id = get_session_id(request)
-    selected_employees = SelectedEmployee.objects.all().exclude(votes__session_id=session_id)
+    selected_employees = SelectedEmployee.objects.all().exclude(votes__session_id=session_id).order_by('-created_at')
     if selected_employees:
         return render(request, 'quiz-start.html', {'selected_employees': selected_employees})
     else:
