@@ -148,6 +148,11 @@ class SelectedEmployee(models.Model):
     TYPE = (
         ('professor', 'Professor'),
         ('dotsent', 'Dotsent'),
+        ('mudir', 'Mudir'),
+        ('katta_oqituvchi', 'Katta O\'qituvchi'),
+        ('oqituvchi_stajyor', 'O\'qituvchi-stajyor'),
+        ('o\'qituvchi', 'O\'qituvchi'),
+
     )
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='selected_employee')
     type = models.CharField(max_length=20, choices=TYPE, null=True)
