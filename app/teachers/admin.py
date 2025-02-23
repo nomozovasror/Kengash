@@ -15,6 +15,7 @@ admin.site.register(StaffPosition)
 admin.site.register(EmployeeStatus)
 admin.site.register(EmployeeType)
 admin.site.register(Vote)
+admin.site.register(VotingTimer)
 
 # @admin.register(AllowedTeachers)
 # class AllowedTeachersAdmin(admin.ModelAdmin):

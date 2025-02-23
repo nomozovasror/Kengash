@@ -175,3 +175,19 @@ class Vote(models.Model):
 
     def __str__(self):
         return f"{self.employee.employee.full_name}"
+
+
+class VotingTimer(models.Model):
+    seconds = models.IntegerField(default=0)
+    is_running = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Voting Timer"
+        verbose_name_plural = "Voting Timers"
+
+    def save(self, *args, **kwargs):
+        # Ensure only one instance exists
+        if VotingTimer.objects.exists() and not self.pk:
+            self.pk = VotingTimer.objects.first().pk
+        super().save(*args, **kwargs)

@@ -203,10 +203,14 @@ def finish_vote(request):
 
     return render(request, 'quiz-result.html')
 
+
 def start_vote(request):
     session_id = get_session_id(request)
-    selected_employees = SelectedEmployee.objects.all().exclude(votes__session_id=session_id).order_by('-created_at')
-    if selected_employees:
+    selected_employees = SelectedEmployee.objects.all().exclude(votes__session_id=session_id).order_by('created_at')
+
+    timer, _ = VotingTimer.objects.get_or_create(id=1)
+
+    if timer.is_running and selected_employees:
         return render(request, 'quiz-start.html', {'selected_employees': selected_employees})
     else:
         return redirect('teachers:finish_vote')
@@ -234,15 +238,48 @@ class VoteView(View):
         return JsonResponse({'success': True, 'message': "Your vote has been recorded."})
 
 def dashboard(request):
-    return render(request, 'table.html')
+    return render(request, 'counter.html')
 
 
 def get_dashboard_data(request):
     votes_count = Vote.objects.values('session_id').distinct().count()
-    employees = SelectedEmployee.objects.all()
+
+    return JsonResponse({
+            'votes_count': votes_count,
+        })
+
+def get_result(request):
+    if request.user.is_authenticated:
+        return render(request, 'table.html')
+    else:
+        return redirect('teachers:home')
+
+
+@csrf_exempt
+def save_timer(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        timer, _ = VotingTimer.objects.get_or_create(id=1)
+        timer.seconds = data['seconds']
+        timer.is_running = data['is_running']
+        timer.save()
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
+
+def get_timer(request):
+    timer, _ = VotingTimer.objects.get_or_create(id=1)
+    return JsonResponse({
+        'seconds': timer.seconds,
+        'is_running': str(timer.is_running).lower()
+    })
+
+def get_result_data(request):
+    votes_count = Vote.objects.values('session_id').distinct().count()
+    employees = SelectedEmployee.objects.all().order_by('created_at')
     all_true = Vote.objects.filter(vote__contains='rozi').count()
     all_false = Vote.objects.filter(vote__contains='qarshi').count()
     all_neutral = Vote.objects.filter(vote__contains='betaraf').count()
+    timer = VotingTimer.objects.get(id=1)
 
     votes_list = [all_false, all_true, all_neutral]
 
@@ -269,10 +306,11 @@ def get_dashboard_data(request):
         })
 
     return JsonResponse({
-            'votes_count': votes_count,
-            'employees': employees_result,
-            'votes_list': votes_list,
-        })
+        'votes_count': votes_count,
+        'employees': employees_result,
+        'votes_list': votes_list,
+        'timer': timer.seconds
+    })
 
 
 def custom_title(text):
@@ -310,13 +348,12 @@ def generate_vote_results_docx(request):
     static_dir = settings.STATICFILES_DIRS[0]
     template_path = os.path.join(static_dir, 'template.docx')
 
-    # Templatni ochish
     try:
         template = Document(template_path)
     except Exception as e:
         raise Exception(f"Template faylini ochishda xatolik: {e}")
 
-    employees = SelectedEmployee.objects.all()
+    employees = SelectedEmployee.objects.all().order_by('created_at')
     items = []
 
     for i, employee in enumerate(employees, 1):

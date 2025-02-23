@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    Natijalar
+{% endblock %}
+
+{% block link %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+{% endblock %}
+
+{% block content %}
+    <main>
+        <section class="pt-5 pb-5">
+            <div class="container">
+                <div class="card-body p-10 text-center">
+                    <div class="mb-4">
+                        <h2>📊 Elektron ovoz berish jarayoni</h2>
+                        <p class="mb-0 px-lg-8">Qatnashchilarning ovoz berishi kutilmoqda!</p>
+                    </div>
+                    <div class="d-flex justify-content-center">
+                        <div id="chart"></div>
+                    </div>
+                    <div class="mt-3">
+                        <div id="timer" style="font-size: 24px;">00:00</div>
+                        <span class="mt-2 d-block">
+                            43 kishidan
+                            <span class="text-dark votes-percentage">0% (0 points)</span>
+                        </span>
+                        <span class="mt-2 d-block">
+                            Qolgan:
+                            <span class="text-dark remaining-percentage">0%</span>
+                        </span>
+                    </div>
+                    <div class="mt-5">
+                        <button id="start-toggle" class="btn btn-primary px-5">Start</button>
+                        <a href="{% url 'teachers:get_result' %}" id="show-result" class="btn btn-success" style="display: none;">Natijalarni ko'rish</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {{ votes_list }}
+    </main>
+
+    <script>
+        let options = {
+            series: [0],
+            chart: {
+                height: 350,
+                type: 'radialBar',
+            },
+            plotOptions: {
+                radialBar: {
+                    hollow: {
+                        size: '70%',
+                    }
+                },
+            },
+            labels: ['Ovozlar'],
+        };
+        let chart = new ApexCharts(document.querySelector("#chart"), options);
+        chart.render();
+
+        // Timer variables
+        let timerInterval;
+        let seconds = 0;
+        let isRunning = false;
+
+        function updateDashboard() {
+            $.get("{% url 'teachers:get_dashboard_data' %}", function (data) {
+                let votes_percentage = ((100 * data.votes_count) / 43).toFixed(1);
+                let remaining_percentage = (100 - votes_percentage).toFixed(1)
+                chart.updateSeries([votes_percentage]);
+                $(".votes-percentage").text(`${data.votes_count} ta kishi ovoz berdi (${votes_percentage}%)`);
+                $(".remaining-percentage").text(`${remaining_percentage}%`);
+            });
+        }
+
+        function updateTimerDisplay() {
+            let minutes = Math.floor(seconds / 60);
+            let remainingSeconds = seconds % 60;
+            $('#timer').text(
+                `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+            );
+        }
+
+        function saveTimerToDB() {
+        $.ajax({
+            url: "{% url 'teachers:save_timer' %}",
+            type: 'POST',
+            contentType: 'application/json',  // Set content type to JSON
+            data: JSON.stringify({            // Convert data to JSON string
+                seconds: seconds,
+                is_running: isRunning
+            }),
+            success: function(response) {
+                console.log('Timer saved successfully');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error saving timer:', error);
+            }
+        });
+    }
+
+    function loadTimerFromDB() {
+        $.get("{% url 'teachers:get_timer' %}", function(data) {
+            seconds = parseInt(data.seconds) || 0;
+            isRunning = data.is_running === 'true';
+
+            updateTimerDisplay();
+
+            if (isRunning) {
+                $('#start-toggle').text('Stop').removeClass('btn-primary').addClass('btn-danger');
+                startTimer();
+            } else if (seconds > 0) {
+                $('#start-toggle').hide();
+                $('#show-result').show();
+            }
+        });
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(function() {
+            seconds++;
+            updateTimerDisplay();
+            saveTimerToDB();
+        }, 1000);
+    }
+
+    // Button controls
+    const startButton = $('#start-toggle');
+    const showResultButton = $('#show-result');
+
+    startButton.click(function() {
+        if (!isRunning) {
+            $(this).text('Stop').removeClass('btn-primary').addClass('btn-danger');
+            isRunning = true;
+            startTimer();
+            saveTimerToDB();
+        } else {
+            clearInterval(timerInterval);
+            $(this).hide();
+            showResultButton.show();
+            isRunning = false;
+            saveTimerToDB();
+        }
+    });
+
+    // Initial setup
+    setInterval(updateDashboard, 5000);
+    updateDashboard();
+    loadTimerFromDB();
+    </script>
+
+{% endblock %}
