@@ -150,16 +150,22 @@ class SelectedEmployee(models.Model):
         ('dotsent', 'Dotsent'),
     )
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='selected_employee')
-    type = models.CharField(max_length=20, choices=TYPE)
+    type = models.CharField(max_length=20, choices=TYPE, null=True)
+    which_position = models.CharField(max_length=255, null=True)
 
     def __str__(self):
         return self.employee.full_name
 
 
 class Vote(models.Model):
+    TYPE_CHOICE = (
+        ('rozi', 'Roziman'),
+        ('qarshi', 'Qarshiman'),
+        ('betaraf', 'Betaraf')
+    )
     employee = models.ForeignKey(SelectedEmployee, on_delete=models.CASCADE, related_name='votes')
-    vote = models.BooleanField()
+    vote = models.CharField(max_length=20, choices=TYPE_CHOICE)
     session_id = models.UUIDField(null=True)
 
     def __str__(self):
-        return f"{self.employee.employee.full_name} - {'Yes' if self.vote else 'No'}"
+        return f"{self.employee.employee.full_name}"

@@ -10,4 +10,5 @@ urlpatterns = [
     path('vote/', VoteView.as_view(), name='vote'),
     path('dashboard/', dashboard, name='dashboard'),
     path('api/dashboard-data/', get_dashboard_data, name='get_dashboard_data'),
+    path('download-results/', generate_vote_results_docx, name='download_results'),
 ]

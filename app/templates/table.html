@@ -36,10 +36,8 @@
                 </div>
                 <div id="result-table" class="row mt-0 mt-md-4" style="display: none">
                     <div class="col-sm-12 col-md-12 mb-3">
-                        <!-- Card -->
-                        <div class="card border-0">
-
-                            <div class="card-header">
+                        <div class="card border-0 mb-3">
+                            <div class="card-body">
                                 <div class="row">
                                     <div class="col-6 d-flex flex-column justify-content-center align-items-center">
                                         <h1 style="font-size: 68px; color: #222" class="votes_count"></h1>
@@ -50,6 +48,9 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        <!-- Card -->
+                        <div class="card border-0">
                             <!-- Card body -->
                             <div class="card-body p-10">
                                 <div class="table-responsive overflow-y-hidden">
@@ -58,8 +59,10 @@
                                         <tr>
                                             <th>FIO</th>
                                             <th>Ovoz ko'rsatkichi</th>
-                                            <th>Ha</th>
-                                            <th>Yo'q</th>
+                                            <th style="text-align: center">Qatnashganlar</th>
+                                            <th style="text-align: center; width: 50px;">Rozi</th>
+                                            <th style="text-align: center; width: 50px;">Qarshi</th>
+                                            <th style="text-align: center; width: 50px;">Betaraf</th>
                                         </tr>
                                         </thead>
                                         <tbody id="employee_table">
@@ -70,8 +73,11 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-center">
-                        <button onclick="hideDiv()" class="btn btn-sm btn-success" id="hide-toggle">Natijalarni yashirish
+                        <button onclick="hideDiv()" class="btn btn-sm btn-success mx-1" id="hide-toggle">Natijalarni
+                            yashirish
                         </button>
+                        <a href="{% url 'teachers:download_results' %}" class="btn btn-secondary mx-1" download>Docx
+                            yuklash</a>
                     </div>
                 </div>
             </div>
@@ -81,27 +87,26 @@
     </main>
 
     <script>
-        let chart;  // Global o'zgaruvchi sifatida e'lon qilamiz
+        let chart;
 
         function updateDashboard() {
             $.get("{% url 'teachers:get_dashboard_data' %}", function (data) {
-
                 let options = {
                     series: data.votes_list,
                     chart: {
                         width: 380,
                         type: 'pie',
                     },
-                    labels: ['Yo\'q', 'Ha'],
+                    labels: ['Qarshi', 'Rozi', 'Betaraf'],
                     legend: {
                         position: 'bottom'
                     },
                     plotOptions: {
-                      pie: {
-                        dataLabels: {
-                          offset: -30,
-                        },
-                      }
+                        pie: {
+                            dataLabels: {
+                                offset: -30,
+                            },
+                        }
                     },
                     dataLabels: {
                         enabled: true,
@@ -129,7 +134,17 @@
                     chart = new ApexCharts(document.querySelector("#chart"), options);
                     chart.render();
                 } else {
-                    chart.updateSeries(data.votes_list);
+                    // Seriyalarni va boshqa sozlamalarni yangilash
+                    chart.updateOptions({
+                        series: data.votes_list,
+                        dataLabels: {
+                            formatter: function (val, opts) {
+                                let total = data.votes_list.reduce((acc, curr) => acc + curr, 0);
+                                let count = data.votes_list[opts.seriesIndex];
+                                return `${count} ta (${val.toFixed(1)}%)`;
+                            }
+                        }
+                    });
                 }
 
                 $(".votes_count").text(data.votes_count);
@@ -141,7 +156,10 @@
                         <div class="avatar avatar-lg">
                             <img alt="avatar" src="${employee.image || "{% static 'assets/images/default.webp' %}"}" class="rounded-circle"/>
                         </div>
-                        <h5>${employee.name}</h5>
+                        <div>
+                            <h5 class="mb-0">${employee.name}</h5>
+                            <h6 class="text-secondary mb-0">${employee.position}</h6>
+                        </div>
                     </div>
                 </td>
                 <td>
@@ -154,11 +172,12 @@
                         </div>
                     </div>
                 </td>
-                <td><h5>${employee.true}</h5></td>
-                <td><h5>${employee.false}</h5></td>
+                <td style="text-align: center;"><h5>${employee.all_votes}</h5></td>
+                <td style="text-align: center;"><h5 class="text-success">${employee.true}</h5></td>
+                <td style="text-align: center;"><h5 class="text-danger">${employee.false}</h5></td>
+                <td style="text-align: center;"><h5>${employee.neutral}</h5></td>
             </tr>
         `).join('');
-
                 $("#employee_table").html(rows);
             });
         }

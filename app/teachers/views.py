@@ -2,6 +2,13 @@ import json
 import os
 import uuid
 
+from django.conf import settings
+from docx import Document
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
+from docx.shared import Pt
+from django.http import FileResponse
+import io
 import requests
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -212,10 +219,6 @@ class VoteView(View):
         employee_id = data.get('employee_id')
         vote = data.get('vote')
         is_last = data.get('is_last')
-        if vote == 'yes':
-            vote_value = True
-        else:
-            vote_value = False
 
         session_id = get_session_id(request)
 
@@ -224,7 +227,7 @@ class VoteView(View):
         if Vote.objects.filter(employee=selected_employee, session_id=session_id).exists():
             return JsonResponse({'success': False, 'message': "You have already voted.", })
 
-        Vote.objects.create(employee=selected_employee, vote=vote_value, session_id=session_id)
+        Vote.objects.create(employee=selected_employee, vote=vote, session_id=session_id)
         if is_last:
             return JsonResponse({'success': True, 'message': "Your vote has been recorded.", 'is_last': True})
 
@@ -237,26 +240,31 @@ def dashboard(request):
 def get_dashboard_data(request):
     votes_count = Vote.objects.values('session_id').distinct().count()
     employees = SelectedEmployee.objects.all()
-    all_true = Vote.objects.filter(vote=True).count()
-    all_false = Vote.objects.filter(vote=False).count()
+    all_true = Vote.objects.filter(vote__contains='rozi').count()
+    all_false = Vote.objects.filter(vote__contains='qarshi').count()
+    all_neutral = Vote.objects.filter(vote__contains='betaraf').count()
 
-    votes_list = [all_false, all_true]
-    print(votes_list)
+    votes_list = [all_false, all_true, all_neutral]
 
     employees_result = []
     for employee in employees:
         employee_votes = Vote.objects.filter(employee=employee).count()
-        employee_true_votes = Vote.objects.filter(employee=employee, vote=True).count()
-        employee_false_votes = Vote.objects.filter(employee=employee, vote=False).count()
-        percentage = (employee_true_votes / employee_votes) * 100 if employee_votes > 0 else 0
+        employee_true_votes = Vote.objects.filter(employee=employee, vote__contains='rozi').count()
+        employee_false_votes = Vote.objects.filter(employee=employee, vote__contains='qarshi').count()
+        employee_neutral_votes = Vote.objects.filter(employee=employee, vote__contains='betaraf').count()
+        all_votes = Vote.objects.filter(employee=employee).count()
 
+        percentage = (employee_true_votes / employee_votes) * 100 if employee_votes > 0 else 0
 
         employees_result.append({
             'name': str(employee.employee.full_name),
+            'position': str(employee.which_position),
             'image': str(employee.employee.image),
             'votes': employee_votes,
             'true': employee_true_votes,
             'false': employee_false_votes,
+            'neutral': employee_neutral_votes,
+            'all_votes': all_votes,
             'percentage': round(percentage, 2),
         })
 
@@ -267,3 +275,115 @@ def get_dashboard_data(request):
         })
 
 
+def custom_title(text):
+    if not text:
+        return text
+
+    result = []
+    current_word = []
+    i = 0
+
+    while i < len(text):
+        if text[i].isspace():
+            if current_word:
+                result.append(''.join(current_word))
+                current_word = []
+            result.append(text[i])
+        elif text[i] in "'":
+            if current_word:
+                result.append(''.join(current_word))
+                current_word = [text[i]]
+            else:
+                current_word.append(text[i])
+        else:
+            current_word.append(
+                text[i].lower() if i > 0 and text[i - 1].isalpha() else text[i].upper() if not current_word else text[
+                    i].lower())
+        i += 1
+
+    if current_word:
+        result.append(''.join(current_word))
+
+    return ''.join(result)
+
+def generate_vote_results_docx(request):
+    static_dir = settings.STATICFILES_DIRS[0]
+    template_path = os.path.join(static_dir, 'template.docx')
+
+    # Templatni ochish
+    try:
+        template = Document(template_path)
+    except Exception as e:
+        raise Exception(f"Template faylini ochishda xatolik: {e}")
+
+    employees = SelectedEmployee.objects.all()
+    items = []
+
+    for i, employee in enumerate(employees, 1):
+        employee_votes = Vote.objects.filter(employee=employee).count()
+        employee_true_votes = Vote.objects.filter(employee=employee, vote='rozi').count()  # 'rozi' ni to'g'ri tekshirish
+        employee_false_votes = Vote.objects.filter(employee=employee, vote='qarshi').count()
+        employee_neutral_votes = Vote.objects.filter(employee=employee, vote='betaraf').count()
+        all_votes = Vote.objects.filter(employee=employee).count()
+
+        true_percentage = (employee_true_votes / all_votes * 100) if all_votes > 0 else 0
+        false_percentage = (employee_false_votes / all_votes * 100) if all_votes > 0 else 0
+        neutral_percentage = (employee_neutral_votes / all_votes * 100) if all_votes > 0 else 0
+        percentage = (employee_true_votes / employee_votes) * 100 if employee_votes > 0 else 0
+
+        item = {
+            'number': str(i),
+            'position': employee.which_position,
+            'candidate': custom_title(employee.employee.full_name),
+            'total_votes': str(all_votes),
+            'yes': f"{employee_true_votes} ({true_percentage:.1f}%)",
+            'no': f"{employee_false_votes} ({false_percentage:.1f}%)",
+            'neutral': f"{employee_neutral_votes} ({neutral_percentage:.1f}%)",
+            'result': 'O\'tdi' if percentage >= 50 else 'O\'tmadi',
+        }
+        items.append(item)
+
+    try:
+        table = template.tables[0]
+    except IndexError:
+        raise Exception("Hujjatda jadval topilmadi. Templatni tekshiring.")
+
+    if len(table.rows) > 1:
+        raise Exception("Templatdagi jadvalda faqat sarlavha qatori bo‘lishi kerak. Qo'shimcha qatorlarni o'chiring.")
+
+    for cell in table.rows[0].cells:
+        cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+        for paragraph in cell.paragraphs:
+            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            for run in paragraph.runs:
+                run.font.name = 'Times New Roman'
+                run.font.size = Pt(14)
+
+    for item in items:
+        new_row = table.add_row()
+        new_row.cells[0].text = item['number']
+        new_row.cells[1].text = item['position']  # Лавозим
+        new_row.cells[2].text = item['candidate']  # Номзодлар
+        new_row.cells[3].text = item['total_votes']  # Овоз беришда қатнашганлар сони
+        new_row.cells[4].text = item['yes']  # Рози
+        new_row.cells[5].text = item['no']  # Қарши
+        new_row.cells[6].text = item['neutral']  # Бетараф
+        new_row.cells[7].text = item['result']  # Натижа
+
+        # Har bir yangi qatorning hujayralarini formatlash
+        for cell in new_row.cells:
+            cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER  # Vertikal markazlash
+            for paragraph in cell.paragraphs:
+                paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER  # Gorizontal markazlash
+                for run in paragraph.runs:
+                    run.font.name = 'Times New Roman'
+                    run.font.size = Pt(14)  # Shrift o‘lchamini 14 punkt qilish
+
+    # Hujjatni xotirada saqlash (buffer)
+    buffer = io.BytesIO()
+    template.save(buffer)
+    buffer.seek(0)
+
+    # Foydalanuvchi uchun yuklab olish
+    response = FileResponse(buffer, as_attachment=True, filename='vote_results.docx')
+    return response
