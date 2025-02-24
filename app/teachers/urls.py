@@ -27,4 +27,6 @@ urlpatterns = [
     path('start_vote/', start_vote, name='start_vote'),
 
     path('get_vote_data/', get_vote_data, name='get_vote_data'),
+
+    path('reset_all_status/', reset_all_status, name='reset_all_status'),
 ]

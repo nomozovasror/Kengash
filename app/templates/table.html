@@ -47,14 +47,17 @@
                                         {% for employee in selected_employees %}
                                             <tr data-id="{{ employee.id }}">
                                                 <td>{{ forloop.counter }}</td>
-                                                <td>
-                                                    <div class="avatar avatar-lg">
-                                                        <img alt="avatar"
-                                                             src="{% if employee.employee.image %}{{ employee.employee.image }}{% else %}{% static 'assets/images/default.webp' %}{% endif %}"
-                                                        class="rounded-circle"/>
-                                                    </div>
-                                                </td>
-                                                <td>{{ employee.employee.full_name }}</td>
+                                                                <td class="px-0">
+                                                                    <div class="d-flex align-items-center gap-3">
+                                                                        <div class="avatar avatar-lg">
+                                                                            <img alt="avatar" src="{{ employee.employee.image }}" class="rounded-circle"/>
+                                                                        </div>
+                                                                        <div>
+                                                                            <h4 class="mb-0">{{ employee.employee.full_name }}</h4>
+                                                                            <h5 class="text-secondary mb-0">{{employee.employee.position}}</h5>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
                                                 <td>
                                                     <button class="btn btn-sm start-btn btn-success w-50"
                                                             data-id="{{ employee.id }}"

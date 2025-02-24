@@ -497,3 +497,26 @@ def generate_vote_results_docx(request):
     # Foydalanuvchi uchun yuklab olish
     response = FileResponse(buffer, as_attachment=True, filename='vote_results.docx')
     return response
+
+
+
+
+@csrf_exempt
+def reset_all_status(request):
+    if request.method == 'POST':
+        try:
+            # Barcha SelectedEmployee obyektlarini yangilash
+            updated_count = SelectedEmployee.objects.update(status=False, voted=False)
+            return JsonResponse({
+                'status': 'success',
+                'message': f'{updated_count} ta obyektning status va voted qiymatlari False ga o\'zgartirildi'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=500)
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Faqat POST so\'rovlari qabul qilinadi'
+    }, status=405)
