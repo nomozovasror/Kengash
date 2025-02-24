@@ -87,7 +87,7 @@
                     labels: ['Qarshi', 'Rozi', 'Betaraf'],
                     legend: {
                         position: 'bottom',
-                        fontSize: '16px',
+                        fontSize: '20px',
                     },
                     plotOptions: {
                         pie: {
@@ -142,7 +142,6 @@
                 $('.timer').text(
                     `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
                 );
-
                 let rows = data.employees.map((employee, index) => `
             <tr>
                 <td class="text-center m-0"><h2>${index + 1}</h2></td>

@@ -38,7 +38,7 @@
                                     <table class="table mb-0 text-nowrap table-hover table-centered">
                                         <thead>
                                         <tr style="font-size: 20px">
-                                            <th>#</th>
+                                            <th class="text-center px-1" style="width: 30px">#</th>
                                             <th>F.I.SH</th>
                                             <th>Boshlash</th>
                                         </tr>
@@ -46,15 +46,15 @@
                                         <tbody id="employee_table">
                                         {% for employee in selected_employees %}
                                             <tr data-id="{{ employee.id }}">
-                                                <td>{{ forloop.counter }}</td>
+                                                <td class="text-center px-1" style="width: 30px"><h4>{{ forloop.counter }}</h4></td>
                                                                 <td class="px-0">
                                                                     <div class="d-flex align-items-center gap-3">
                                                                         <div class="avatar avatar-lg">
                                                                             <img alt="avatar" src="{{ employee.employee.image }}" class="rounded-circle"/>
                                                                         </div>
                                                                         <div>
-                                                                            <h4 class="mb-0">{{ employee.employee.full_name }}</h4>
-                                                                            <h5 class="text-secondary mb-0">{{employee.employee.position}}</h5>
+                                                                            <h3 class="mb-0">{{ employee.employee.full_name }}</h3>
+                                                                            <h4 class="text-secondary mb-0">{{employee.employee.position}}</h4>
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -250,7 +250,7 @@
                             <div class="d-flex align-items-center">
                                 <img src="${data.image}" alt="course" style="width: 200px" class="rounded">
                                 <div class="ms-3">
-                                    <h3 class="mb-0 border-bottom"><a href="#" class="text-inherit">${data.full_name}</a></h3>
+                                    <h2 class="mb-0 border-bottom"><a href="#" class="text-inherit">${data.full_name}</a></h2>
                                     <div>
                                         <h4>Tug‘ilgan yili: <span class="text-secondary">${data.birth_date}</span></h4>
                                         <h4>Kafedra: <span class="text-secondary">${data.chair}</span></h4>
@@ -285,7 +285,7 @@
                     labels: ['Qarshi', 'Rozi', 'Betaraf'],
                     legend: {
                         position: 'bottom',
-                        fontSize: '16px',
+                        fontSize: '22px',
                     },
                     plotOptions: {
                         pie: {
