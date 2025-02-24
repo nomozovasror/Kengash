@@ -47,7 +47,8 @@
                                     <table class="table mb-0 text-nowrap table-hover table-centered">
                                         <thead>
                                         <tr style="font-size: 18px">
-                                            <th>FIO</th>
+                                            <th>#</th>
+                                            <th>F.I.SH</th>
                                             <th>Ovoz ko'rsatkichi</th>
                                             <th style="text-align: center;">Qatnashganlar</th>
                                             <th style="text-align: center; width: 50px;">Rozi</th>
@@ -143,8 +144,9 @@
                     `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
                 );
 
-                let rows = data.employees.map(employee => `
+                let rows = data.employees.map((employee, index) => `
             <tr>
+                <td class="text-center m-0"><h3>${index + 1}</h3></td>
                 <td class="px-0">
                     <div class="d-flex align-items-center gap-3">
                         <div class="avatar avatar-lg">
