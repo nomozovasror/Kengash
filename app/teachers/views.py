@@ -342,11 +342,20 @@ def get_result_data(request):
 
 
 def get_vote_data(request):
-    active_employee = SelectedEmployee.objects.filter(status=True, voted=False).first()
+    employee_id = request.GET.get('employee_id')  # Frontenddan kelgan employee_id ni olish
+    if employee_id:
+        active_employee = SelectedEmployee.objects.filter(id=employee_id, status=True, voted=False).first()
+    else:
+        active_employee = SelectedEmployee.objects.filter(status=True, voted=False).first()
+
     if active_employee:
         votes = Vote.objects.filter(employee=active_employee)
         dt = datetime.datetime.fromtimestamp(int(active_employee.employee.birth_timestamp))
-        vote_counts = [votes.filter(vote='rozi').count(), votes.filter(vote='qarshi').count(), votes.filter(vote='betaraf').count()]
+        vote_counts = [
+            votes.filter(vote='qarshi').count(),  # Qarshi birinchi bo‘lsin (frontendda moslashtiramiz)
+            votes.filter(vote='rozi').count(),
+            votes.filter(vote='betaraf').count()
+        ]
         return JsonResponse({
             'status': 'success',
             'employee_id': active_employee.id,
@@ -363,7 +372,6 @@ def get_vote_data(request):
         'status': 'no_active',
         'message': 'Hozirda faol ovoz berish mavjud emas'
     })
-
 
 @csrf_exempt
 def save_timer(request):

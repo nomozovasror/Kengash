@@ -6,10 +6,8 @@
 
 {% block link %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- ApexCharts kutubxonasini qo'shish -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.js"></script>
-
 {% endblock %}
 
 {% block content %}
@@ -49,28 +47,28 @@
                                         {% for employee in selected_employees %}
                                             <tr data-id="{{ employee.id }}">
                                                 <td class="text-center px-1" style="width: 30px"><h4>{{ forloop.counter }}</h4></td>
-                                                                <td class="px-0">
-                                                                    <div class="d-flex align-items-center gap-3">
-                                                                        <div class="avatar avatar-lg">
-                                                                            <img alt="avatar" src="{{ employee.employee.image }}" class="rounded-circle"/>
-                                                                        </div>
-                                                                        <div>
-                                                                            <h3 class="mb-0">{{ employee.employee.full_name }}</h3>
-                                                                            <h4 class="text-secondary mb-0">{{employee.employee.position}}</h4>
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
+                                                <td class="px-0">
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <div class="avatar avatar-lg">
+                                                            <img alt="avatar" src="{{ employee.employee.image }}" class="rounded-circle"/>
+                                                        </div>
+                                                        <div>
+                                                            <h3 class="mb-0">{{ employee.employee.full_name }}</h3>
+                                                            <h4 class="text-secondary mb-0">{{ employee.employee.position }}</h4>
+                                                        </div>
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     <button class="btn btn-sm start-btn btn-success w-50"
                                                             data-id="{{ employee.id }}"
                                                             data-fullname="{{ employee.employee.full_name }}"
                                                             {% if employee.voted %}
-                                                            disabled
-                                                            class="btn btn-light"
+                                                                disabled
+                                                                class="btn btn-light"
                                                             {% elif employee.status %}
-                                                            class="btn btn-danger"
+                                                                class="btn btn-danger"
                                                             {% else %}
-                                                            class="btn btn-success"
+                                                                class="btn btn-success"
                                                             {% endif %}>
                                                         {% if employee.voted %}
                                                             Yakunlandi
@@ -101,18 +99,19 @@
         $(document).ready(function () {
             let activeEmployeeId = null;
             let voteUpdateInterval = null;
-            let latestVoteData = null; // So'nggi ovoz berish ma'lumotlarini saqlash
+            let latestVoteData = null;
 
-            // Har 5 sekundda ma'lumotlarni yangilashni boshlash
+            // Har 5 sekundda ma'lumotlarni yangilash
             function startVoteUpdate() {
-                if (!voteUpdateInterval) {
+                if (!voteUpdateInterval && activeEmployeeId) {
                     voteUpdateInterval = setInterval(function () {
                         $.ajax({
                             url: "{% url 'teachers:get_vote_data' %}",
                             type: 'GET',
+                            data: { 'employee_id': activeEmployeeId },
                             success: function (response) {
                                 if (response.status === 'success') {
-                                    latestVoteData = response; // Ma'lumotlarni saqlash
+                                    latestVoteData = response;
                                     updateTeacherData(response);
                                 } else {
                                     clearTeacherData();
@@ -134,12 +133,28 @@
                 }
             }
 
-            // Sahifa yuklanganda agar faol bo'lsa yangilanishni boshlash
-            const activeButton = $('.start-btn.btn-danger');
-            if (activeButton.length > 0) {
-                disableOtherButtons(activeButton);
-                activeEmployeeId = activeButton.data('id');
-                startVoteUpdate();
+            // Faol holatni tekshirish va UI ni yangilash
+            function checkActiveEmployee() {
+                $.ajax({
+                    url: "{% url 'teachers:get_vote_data' %}",
+                    type: 'GET',
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            activeEmployeeId = response.employee_id;
+                            latestVoteData = response;
+                            updateTeacherData(response);
+                            disableOtherButtons($(`.start-btn[data-id="${activeEmployeeId}"]`));
+                            startVoteUpdate();
+                        } else {
+                            activeEmployeeId = null;
+                            enableAllButtons();
+                            clearTeacherData();
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Check active employee error:', error);
+                    }
+                });
             }
 
             // Tugma hodisasi
@@ -150,6 +165,12 @@
                 const isStopping = $button.text().trim() === 'Stop';
 
                 if ($button.text().trim() === 'Yakunlandi') return;
+
+                // Agar faol employee mavjud bo'lsa, yangi Start ga ruxsat berma
+                if (isStarting && activeEmployeeId && activeEmployeeId !== employeeId) {
+                    alert('Hozirda boshqa ovoz berish jarayoni faol. Avval uni yakunlang.');
+                    return;
+                }
 
                 $button.prop('disabled', true);
 
@@ -223,7 +244,7 @@
                 }
             });
 
-            // Boshqa tugmalarni disable qilish funksiyasi
+            // Boshqa tugmalarni disable qilish
             function disableOtherButtons($currentButton) {
                 $('.start-btn').each(function () {
                     const $btn = $(this);
@@ -233,7 +254,7 @@
                 });
             }
 
-            // Barcha tugmalarni enable qilish funksiyasi
+            // Barcha tugmalarni enable qilish
             function enableAllButtons() {
                 $('.start-btn').each(function () {
                     const $btn = $(this);
@@ -275,7 +296,7 @@
             // Yakuniy ma'lumotlarni pie chart bilan ko'rsatish
             function showFinalData() {
                 const $voteSummary = $('#vote_summary');
-                if (!latestVoteData) return; // Agar ma'lumotlar hali yuklanmagan bo'lsa, hech narsa qilma
+                if (!latestVoteData) return;
 
                 const voteList = [latestVoteData.votes[0], latestVoteData.votes[1], latestVoteData.votes[2]];
                 let options = {
@@ -331,6 +352,9 @@
             function clearTeacherData() {
                 $('#teacher_data').html('');
             }
+
+            // Sahifa yuklanganda faol holatni tekshirish
+            checkActiveEmployee();
         });
     </script>
 {% endblock %}
