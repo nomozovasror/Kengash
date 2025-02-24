@@ -207,7 +207,7 @@ def finish_vote(request):
 
 def start(request):
     if request.user.is_authenticated:
-        selected_employees = SelectedEmployee.objects.all().order_by('created_at').order_by('voted')
+        selected_employees = SelectedEmployee.objects.all().order_by('-created_at').order_by('voted')
 
         context={
             'selected_employees': selected_employees
@@ -347,7 +347,6 @@ def get_vote_data(request):
         votes = Vote.objects.filter(employee=active_employee)
         dt = datetime.datetime.fromtimestamp(int(active_employee.employee.birth_timestamp))
         vote_counts = [votes.filter(vote='rozi').count(), votes.filter(vote='qarshi').count(), votes.filter(vote='betaraf').count()]
-
         return JsonResponse({
             'status': 'success',
             'employee_id': active_employee.id,
