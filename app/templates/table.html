@@ -30,8 +30,8 @@
                                 <div class="row">
                                     <div class="col-6 d-flex flex-column justify-content-center align-items-center">
                                         <h1 style="font-size: 68px; color: #222" class="votes_count"></h1>
-                                        <p>Jami ovoz berishda ishtirok etganlar soni</p>
-                                        <p>Ovoz berishga ketgan vaqt <span class="timer"></span></p>
+                                        <h2>Jami ovoz berishda ishtirok etganlar soni</h2>
+                                        <h3 class="text-secondary">Ovoz berishga ketgan vaqt <span class="timer"></span></h3>
                                     </div>
                                     <div class="col-6">
                                         <div id="chart"></div>
@@ -46,10 +46,10 @@
                                 <div class="table-responsive overflow-y-hidden">
                                     <table class="table mb-0 text-nowrap table-hover table-centered">
                                         <thead>
-                                        <tr>
+                                        <tr style="font-size: 18px">
                                             <th>FIO</th>
                                             <th>Ovoz ko'rsatkichi</th>
-                                            <th style="text-align: center">Qatnashganlar</th>
+                                            <th style="text-align: center;">Qatnashganlar</th>
                                             <th style="text-align: center; width: 50px;">Rozi</th>
                                             <th style="text-align: center; width: 50px;">Qarshi</th>
                                             <th style="text-align: center; width: 50px;">Betaraf</th>
@@ -81,12 +81,13 @@
                 let options = {
                     series: data.votes_list,
                     chart: {
-                        width: 380,
+                        width: 420,
                         type: 'pie',
                     },
                     labels: ['Qarshi', 'Rozi', 'Betaraf'],
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        fontSize: '14px',
                     },
                     plotOptions: {
                         pie: {
@@ -103,7 +104,7 @@
                             return `${count} ta (${val.toFixed(1)}%)`;
                         },
                         style: {
-                            fontSize: '14px',
+                            fontSize: '18px',
                             fontWeight: 'bold',
                             colors: ['#fff']
                         }
@@ -150,25 +151,25 @@
                             <img alt="avatar" src="${employee.image || "{% static 'assets/images/default.webp' %}"}" class="rounded-circle"/>
                         </div>
                         <div>
-                            <h5 class="mb-0">${employee.name}</h5>
-                            <h6 class="text-secondary mb-0">${employee.position}</h6>
+                            <h4 class="mb-0">${employee.name}</h4>
+                            <h5 class="text-secondary mb-0">${employee.position}</h5>
                         </div>
                     </div>
                 </td>
                 <td>
                     <div class="d-flex align-items-center">
-                        <div class="me-2"><span>${employee.percentage}%</span></div>
-                        <div class="progress w-100" style="height: 6px">
+                        <div style="font-size: 18px;" class="me-2"><span>${employee.percentage}%</span></div>
+                        <div class="progress w-100" style="height: 8px">
                             <div class="progress-bar ${employee.percentage >= 50 ? "bg-success" : "bg-danger"}" role="progressbar"
                                  style="width: ${employee.percentage}%" aria-valuenow="${employee.percentage}"
                                  aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
                 </td>
-                <td style="text-align: center;"><h5>${employee.all_votes}</h5></td>
-                <td style="text-align: center;"><h5 class="text-success">${employee.true}</h5></td>
-                <td style="text-align: center;"><h5 class="text-danger">${employee.false}</h5></td>
-                <td style="text-align: center;"><h5>${employee.neutral}</h5></td>
+                <td style="text-align: center;"><h3>${employee.all_votes}</h3></td>
+                <td style="text-align: center;"><h3 class="text-success">${employee.true}</h3></td>
+                <td style="text-align: center;"><h3 class="text-danger">${employee.false}</h3></td>
+                <td style="text-align: center;"><h3>${employee.neutral}</h3></td>
             </tr>
         `).join('');
                 $("#employee_table").html(rows);
