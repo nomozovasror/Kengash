@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import uuid
@@ -193,7 +194,7 @@ def update_and_save_employee(request):
 
 def home(request):
     session_id = get_session_id(request)
-    selected_employees = SelectedEmployee.objects.all().exclude(votes__session_id=session_id)
+    selected_employees = SelectedEmployee.objects.filter(status=True).exclude(votes__session_id=session_id)
     if selected_employees:
         return render(request, 'start.html')
     else:
@@ -204,13 +205,58 @@ def finish_vote(request):
     return render(request, 'quiz-result.html')
 
 
+def start(request):
+    if request.user.is_authenticated:
+        selected_employees = SelectedEmployee.objects.all().order_by('created_at').order_by('voted')
+
+        context={
+            'selected_employees': selected_employees
+        }
+        return render(request, 'table.html', context=context)
+    else:
+        return redirect('teachers:home')
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UpdateEmployeeStatusView(View):
+    def post(self, request):
+        try:
+            employee_id = request.POST.get('employee_id')
+            status = request.POST.get('status') == 'true'
+            voted = request.POST.get('voted') == 'true'
+
+            employee = SelectedEmployee.objects.get(id=employee_id)
+            employee.status = status
+            employee.voted = voted
+            employee.save()
+
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Status successfully updated'
+            })
+        except SelectedEmployee.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Employee not found'
+            }, status=404)
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=500)
+
+    def get(self, request):
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Method not allowed'
+        }, status=405)
+
+
 def start_vote(request):
     session_id = get_session_id(request)
-    selected_employees = SelectedEmployee.objects.all().exclude(votes__session_id=session_id).order_by('created_at')
+    selected_employees = SelectedEmployee.objects.filter(status=True).exclude(votes__session_id=session_id).order_by('created_at')
 
-    timer, _ = VotingTimer.objects.get_or_create(id=1)
-
-    if timer.is_running and selected_employees:
+    if selected_employees:
         return render(request, 'quiz-start.html', {'selected_employees': selected_employees})
     else:
         return redirect('teachers:finish_vote')
@@ -250,28 +296,9 @@ def get_dashboard_data(request):
 
 def get_result(request):
     if request.user.is_authenticated:
-        return render(request, 'table.html')
+        return render(request, 'final_table.html')
     else:
         return redirect('teachers:home')
-
-
-@csrf_exempt
-def save_timer(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        timer, _ = VotingTimer.objects.get_or_create(id=1)
-        timer.seconds = data['seconds']
-        timer.is_running = data['is_running']
-        timer.save()
-        return JsonResponse({'status': 'success'})
-    return JsonResponse({'status': 'error'}, status=400)
-
-def get_timer(request):
-    timer, _ = VotingTimer.objects.get_or_create(id=1)
-    return JsonResponse({
-        'seconds': timer.seconds,
-        'is_running': str(timer.is_running).lower()
-    })
 
 def get_result_data(request):
     votes_count = Vote.objects.values('session_id').distinct().count()
@@ -303,14 +330,61 @@ def get_result_data(request):
             'neutral': employee_neutral_votes,
             'all_votes': all_votes,
             'percentage': round(percentage, 2),
+            'status': employee.status,
+            'voted': employee.voted
         })
 
     return JsonResponse({
         'votes_count': votes_count,
         'employees': employees_result,
         'votes_list': votes_list,
-        'timer': timer.seconds
     })
+
+
+def get_vote_data(request):
+    active_employee = SelectedEmployee.objects.filter(status=True, voted=False).first()
+    if active_employee:
+        votes = Vote.objects.filter(employee=active_employee)
+        dt = datetime.datetime.fromtimestamp(int(active_employee.employee.birth_timestamp))
+        vote_counts = [votes.filter(vote='rozi').count(), votes.filter(vote='qarshi').count(), votes.filter(vote='betaraf').count()]
+
+        return JsonResponse({
+            'status': 'success',
+            'employee_id': active_employee.id,
+            'full_name': active_employee.employee.full_name,
+            'image': active_employee.employee.image,
+            'birth_date': dt.strftime('%d.%m.%Y'),
+            'chair': active_employee.employee.department.first().department.name,
+            'position': active_employee.employee.department.first().employee_position.name,
+            'degree': active_employee.employee.academicDegree.name,
+            'which_position': active_employee.which_position,
+            'votes': vote_counts
+        })
+    return JsonResponse({
+        'status': 'no_active',
+        'message': 'Hozirda faol ovoz berish mavjud emas'
+    })
+
+
+@csrf_exempt
+def save_timer(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        timer, _ = VotingTimer.objects.get_or_create(id=1)
+        timer.seconds = data['seconds']
+        timer.is_running = data['is_running']
+        timer.save()
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
+
+def get_timer(request):
+    timer, _ = VotingTimer.objects.get_or_create(id=1)
+    return JsonResponse({
+        'seconds': timer.seconds,
+        'is_running': str(timer.is_running).lower()
+    })
+
+
 
 
 def custom_title(text):

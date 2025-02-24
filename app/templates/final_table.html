@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    Natijalar
+{% endblock %}
+
+{% block link %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <main>
+        <section class="py-4 py-lg-6 bg-secondary">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12 col-md-12 col-12">
+                        <div>
+                            <h1 class="text-white mb-1 display-4">Ovoz berish natijasi</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="pt-5 pb-5">
+            <div class="container">
+                <div id="result-table" class="row mt-0 mt-md-4">
+                    <div class="col-sm-12 col-md-12 mb-3">
+                        <div class="card border-0 mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6 d-flex flex-column justify-content-center align-items-center">
+                                        <h1 style="font-size: 68px; color: #222" class="votes_count"></h1>
+                                        <h2>Jami ovoz berishda ishtirok etganlar soni</h2>
+                                        <h2 class="text-secondary">Ovoz berishga ketgan vaqt <span class="timer"></span></h2>
+                                    </div>
+                                    <div class="col-6">
+                                        <div id="chart"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card -->
+                        <div class="card border-0">
+                            <!-- Card body -->
+                            <div class="card-body p-10">
+                                <div class="table-responsive overflow-y-hidden">
+                                    <table class="table mb-0 text-nowrap table-hover table-centered">
+                                        <thead>
+                                        <tr style="font-size: 20px">
+                                            <th>#</th>
+                                            <th>F.I.SH</th>
+                                            <th>Ovoz ko'rsatkichi</th>
+                                            <th style="text-align: center;">Qatnashganlar</th>
+                                            <th style="text-align: center; width: 50px;">Rozi</th>
+                                            <th style="text-align: center; width: 50px;">Qarshi</th>
+                                            <th style="text-align: center; width: 50px;">Betaraf</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="employee_table">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <a href="{% url 'teachers:download_results' %}" class="btn btn-secondary mx-1" download>Docx
+                            yuklash</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {{ votes_list }}
+    </main>
+
+    <script>
+        let chart;
+
+        function updateDashboard() {
+            $.get("{% url 'teachers:get_result_data' %}", function (data) {
+                let options = {
+                    series: data.votes_list,
+                    chart: {
+                        width: 420,
+                        type: 'pie',
+                    },
+                    labels: ['Qarshi', 'Rozi', 'Betaraf'],
+                    legend: {
+                        position: 'bottom',
+                        fontSize: '16px',
+                    },
+                    plotOptions: {
+                        pie: {
+                            dataLabels: {
+                                offset: -30,
+                            },
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val, opts) {
+                            let total = data.votes_list.reduce((acc, curr) => acc + curr, 0);
+                            let count = data.votes_list[opts.seriesIndex];
+                            return `${count} ta (${val.toFixed(1)}%)`;
+                        },
+                        style: {
+                            fontSize: '18px',
+                            fontWeight: 'bold',
+                            colors: ['#fff']
+                        }
+                    },
+                    responsive: [{
+                        breakpoint: 480,
+                        options: {
+                            chart: {width: 200},
+                            legend: {position: 'bottom'}
+                        }
+                    }]
+                };
+
+                if (!chart) {
+                    chart = new ApexCharts(document.querySelector("#chart"), options);
+                    chart.render();
+                } else {
+                    // Seriyalarni va boshqa sozlamalarni yangilash
+                    chart.updateOptions({
+                        series: data.votes_list,
+                        dataLabels: {
+                            formatter: function (val, opts) {
+                                let total = data.votes_list.reduce((acc, curr) => acc + curr, 0);
+                                let count = data.votes_list[opts.seriesIndex];
+                                return `${count} ta (${val.toFixed(1)}%)`;
+                            }
+                        }
+                    });
+                }
+
+                $(".votes_count").text(data.votes_count);
+
+                let minutes = Math.floor(data.timer / 60);
+                let remainingSeconds = data.timer % 60;
+                $('.timer').text(
+                    `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+                );
+
+                let rows = data.employees.map((employee, index) => `
+            <tr>
+                <td class="text-center m-0"><h2>${index + 1}</h2></td>
+                <td class="px-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar avatar-lg">
+                            <img alt="avatar" src="${employee.image || "{% static 'assets/images/default.webp' %}"}" class="rounded-circle"/>
+                        </div>
+                        <div>
+                            <h4 class="mb-0">${employee.name}</h3>
+                            <h5 class="text-secondary mb-0">${employee.position} ${employee.status}</h4>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div style="font-size: 18px;" class="me-2"><span>${employee.percentage}%</span></div>
+                        <div class="progress w-100" style="height: 8px">
+                            <div class="progress-bar ${employee.percentage >= 50 ? "bg-success" : "bg-danger"}" role="progressbar"
+                                 style="width: ${employee.percentage}%" aria-valuenow="${employee.percentage}"
+                                 aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </td>
+                <td style="text-align: center;"><h2>${employee.all_votes}</h2></td>
+                <td style="text-align: center;"><h2 class="text-success">${employee.true}</h2></td>
+                <td style="text-align: center;"><h2 class="text-danger">${employee.false}</h2></td>
+                <td style="text-align: center;"><h2>${employee.neutral}</h2></td>
+            </tr>
+        `).join('');
+                $("#employee_table").html(rows);
+            });
+        }
+
+        updateDashboard();
+
+    </script>
+
+{% endblock %}

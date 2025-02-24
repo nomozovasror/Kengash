@@ -1,11 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}
-    Natijalar
+    Ovoz Berish
 {% endblock %}
 
 {% block link %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- ApexCharts kutubxonasini qo'shish -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 {% endblock %}
 
 {% block content %}
@@ -14,73 +16,255 @@
             <div class="container">
                 <div class="row">
                     <div class="col-lg-12 col-md-12 col-12">
-                        <div>
-                            <h1 class="text-white mb-1 display-4">Ovoz berish natijasi</h1>
-                        </div>
+                        <h1 class="text-white mb-1 display-4">Ovoz berishni boshlash</h1>
                     </div>
                 </div>
             </div>
         </section>
         <section class="pt-5 pb-5">
             <div class="container">
-                <div id="result-table" class="row mt-0 mt-md-4">
+                <div class="row mt-0 mt-md-4">
                     <div class="col-sm-12 col-md-12 mb-3">
                         <div class="card border-0 mb-3">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-6 d-flex flex-column justify-content-center align-items-center">
-                                        <h1 style="font-size: 68px; color: #222" class="votes_count"></h1>
-                                        <h2>Jami ovoz berishda ishtirok etganlar soni</h2>
-                                        <h3 class="text-secondary">Ovoz berishga ketgan vaqt <span class="timer"></span></h3>
-                                    </div>
-                                    <div class="col-6">
-                                        <div id="chart"></div>
-                                    </div>
-                                </div>
+                            <div class="card-body" id="teacher_data">
+                                <!-- Ovoz berish ma'lumotlari bu yerga keladi -->
                             </div>
                         </div>
-                        <!-- Card -->
+                    </div>
+                    <div class="col-12 mb-3">
                         <div class="card border-0">
-                            <!-- Card body -->
                             <div class="card-body p-10">
-                                <div class="table-responsive overflow-y-hidden">
+                                <div class="table-responsive">
                                     <table class="table mb-0 text-nowrap table-hover table-centered">
                                         <thead>
-                                        <tr style="font-size: 18px">
+                                        <tr style="font-size: 20px">
                                             <th>#</th>
                                             <th>F.I.SH</th>
-                                            <th>Ovoz ko'rsatkichi</th>
-                                            <th style="text-align: center;">Qatnashganlar</th>
-                                            <th style="text-align: center; width: 50px;">Rozi</th>
-                                            <th style="text-align: center; width: 50px;">Qarshi</th>
-                                            <th style="text-align: center; width: 50px;">Betaraf</th>
+                                            <th>Boshlash</th>
                                         </tr>
                                         </thead>
                                         <tbody id="employee_table">
+                                        {% for employee in selected_employees %}
+                                            <tr data-id="{{ employee.id }}">
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ employee.employee.full_name }}</td>
+                                                <td>
+                                                    <button class="btn btn-sm start-btn btn-success w-50"
+                                                            data-id="{{ employee.id }}"
+                                                            data-fullname="{{ employee.employee.full_name }}"
+                                                            {% if employee.voted %}
+                                                                disabled
+                                                                class="btn btn-light"
+                                                            {% elif employee.status %}
+                                                                class="btn btn-danger"
+                                                            {% else %}
+                                                                class="btn btn-success"
+                                                            {% endif %}>
+                                                        {% if employee.voted %}
+                                                            Yakunlandi
+                                                        {% elif employee.status %}
+                                                            Stop
+                                                        {% else %}
+                                                            Start
+                                                        {% endif %}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-end">
-                        <a href="{% url 'teachers:download_results' %}" class="btn btn-secondary mx-1" download>Docx
-                            yuklash</a>
-                    </div>
                 </div>
             </div>
         </section>
-
-        {{ votes_list }}
     </main>
 
     <script>
-        let chart;
+        $(document).ready(function () {
+            let activeEmployeeId = null;
+            let voteUpdateInterval = null;
+            let latestVoteData = null; // So'nggi ovoz berish ma'lumotlarini saqlash
 
-        function updateDashboard() {
-            $.get("{% url 'teachers:get_result_data' %}", function (data) {
+            // Har 5 sekundda ma'lumotlarni yangilashni boshlash
+            function startVoteUpdate() {
+                if (!voteUpdateInterval) {
+                    voteUpdateInterval = setInterval(function() {
+                        $.ajax({
+                            url: "{% url 'teachers:get_vote_data' %}",
+                            type: 'GET',
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    latestVoteData = response; // Ma'lumotlarni saqlash
+                                    updateTeacherData(response);
+                                } else {
+                                    clearTeacherData();
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Vote data AJAX error:', error);
+                            }
+                        });
+                    }, 5000);
+                }
+            }
+
+            // Yangilanishni to'xtatish
+            function stopVoteUpdate() {
+                if (voteUpdateInterval) {
+                    clearInterval(voteUpdateInterval);
+                    voteUpdateInterval = null;
+                }
+            }
+
+            // Sahifa yuklanganda agar faol bo'lsa yangilanishni boshlash
+            const activeButton = $('.start-btn.btn-danger');
+            if (activeButton.length > 0) {
+                disableOtherButtons(activeButton);
+                activeEmployeeId = activeButton.data('id');
+                startVoteUpdate();
+            }
+
+            // Tugma hodisasi
+            $('.start-btn').click(function () {
+                const $button = $(this);
+                const employeeId = $button.data('id');
+                const isStarting = $button.text().trim() === 'Start';
+                const isStopping = $button.text().trim() === 'Stop';
+
+                if ($button.text().trim() === 'Yakunlandi') return;
+
+                $button.prop('disabled', true);
+
+                if (isStarting) {
+                    $.ajax({
+                        url: "{% url 'teachers:update_employee_status' %}",
+                        type: 'POST',
+                        data: {
+                            'employee_id': employeeId,
+                            'status': true,
+                            'voted': false,
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        },
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                $button.text('Stop')
+                                    .removeClass('btn-success')
+                                    .addClass('btn-danger')
+                                    .prop('disabled', false);
+                                disableOtherButtons($button);
+                                activeEmployeeId = employeeId;
+                                startVoteUpdate();
+                            } else {
+                                $button.prop('disabled', false);
+                                alert('Xatolik yuz berdi: ' + response.message);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            $button.prop('disabled', false);
+                            alert('Server bilan bog‘lanishda xatolik yuz berdi');
+                            console.error('AJAX error:', error);
+                        }
+                    });
+                } else if (isStopping) {
+                    $button.text('Yakunlash')
+                        .removeClass('btn-danger')
+                        .addClass('btn-warning')
+                        .prop('disabled', false);
+                    stopVoteUpdate();
+                    showFinalData();
+                } else if ($button.text().trim() === 'Yakunlash') {
+                    $.ajax({
+                        url: "{% url 'teachers:update_employee_status' %}",
+                        type: 'POST',
+                        data: {
+                            'employee_id': employeeId,
+                            'status': false,
+                            'voted': true,
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        },
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                $button.text('Yakunlandi')
+                                    .removeClass('btn-warning')
+                                    .addClass('btn-light')
+                                    .prop('disabled', true);
+                                enableAllButtons();
+                                activeEmployeeId = null;
+                                clearTeacherData();
+                            } else {
+                                $button.prop('disabled', false);
+                                alert('Xatolik yuz berdi: ' + response.message);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            $button.prop('disabled', false);
+                            alert('Server bilan bog‘lanishda xatolik yuz berdi');
+                            console.error('AJAX error:', error);
+                        }
+                    });
+                }
+            });
+
+            // Boshqa tugmalarni disable qilish funksiyasi
+            function disableOtherButtons($currentButton) {
+                $('.start-btn').each(function() {
+                    const $btn = $(this);
+                    if ($btn.data('id') !== $currentButton.data('id') && $btn.text().trim() === 'Start') {
+                        $btn.prop('disabled', true);
+                    }
+                });
+            }
+
+            // Barcha tugmalarni enable qilish funksiyasi
+            function enableAllButtons() {
+                $('.start-btn').each(function() {
+                    const $btn = $(this);
+                    if ($btn.text().trim() === 'Start') {
+                        $btn.prop('disabled', false);
+                    }
+                });
+            }
+
+            // Teacher data ni yangilash
+            function updateTeacherData(data) {
+                const totalVotes = data.votes[0] + data.votes[1] + data.votes[2];
+                $('#teacher_data').html(`
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <img src="${data.image}" alt="course" style="width: 200px" class="rounded">
+                                <div class="ms-3">
+                                    <h3 class="mb-0 border-bottom"><a href="#" class="text-inherit">${data.full_name}</a></h3>
+                                    <div>
+                                        <h4>Tug‘ilgan yili: <span class="text-secondary">${data.birth_date}</span></h4>
+                                        <h4>Kafedra: <span class="text-secondary">${data.chair}</span></h4>
+                                        <h4>Lavozimi: <span class="text-secondary">${data.position}</span></h4>
+                                        <h4>Ilmiy daraja: <span class="text-secondary">${data.degree}</span></h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 d-flex justify-content-center align-items-center" id="vote_summary">
+                            <div class="text-center" id="show_all_data">
+                                <h1 style="font-size: 58px">${totalVotes}</h1>
+                                <h2 class="text-secondary">Nafar kishi ovoz berdi</h2>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
+
+            // Yakuniy ma'lumotlarni pie chart bilan ko'rsatish
+            function showFinalData() {
+                const $voteSummary = $('#vote_summary');
+                if (!latestVoteData) return; // Agar ma'lumotlar hali yuklanmagan bo'lsa, hech narsa qilma
+
+                const voteList = [latestVoteData.votes[0], latestVoteData.votes[1], latestVoteData.votes[2]];
                 let options = {
-                    series: data.votes_list,
+                    series: voteList,
                     chart: {
                         width: 420,
                         type: 'pie',
@@ -88,7 +272,7 @@
                     labels: ['Qarshi', 'Rozi', 'Betaraf'],
                     legend: {
                         position: 'bottom',
-                        fontSize: '14px',
+                        fontSize: '16px',
                     },
                     plotOptions: {
                         pie: {
@@ -100,8 +284,8 @@
                     dataLabels: {
                         enabled: true,
                         formatter: function (val, opts) {
-                            let total = data.votes_list.reduce((acc, curr) => acc + curr, 0);
-                            let count = data.votes_list[opts.seriesIndex];
+                            let total = voteList.reduce((acc, curr) => acc + curr, 0);
+                            let count = voteList[opts.seriesIndex];
                             return `${count} ta (${val.toFixed(1)}%)`;
                         },
                         style: {
@@ -113,73 +297,25 @@
                     responsive: [{
                         breakpoint: 480,
                         options: {
-                            chart: {width: 200},
-                            legend: {position: 'bottom'}
+                            chart: { width: 200 },
+                            legend: { position: 'bottom' }
                         }
                     }]
                 };
 
-                if (!chart) {
-                    chart = new ApexCharts(document.querySelector("#chart"), options);
-                    chart.render();
-                } else {
-                    // Seriyalarni va boshqa sozlamalarni yangilash
-                    chart.updateOptions({
-                        series: data.votes_list,
-                        dataLabels: {
-                            formatter: function (val, opts) {
-                                let total = data.votes_list.reduce((acc, curr) => acc + curr, 0);
-                                let count = data.votes_list[opts.seriesIndex];
-                                return `${count} ta (${val.toFixed(1)}%)`;
-                            }
-                        }
-                    });
-                }
-
-                $(".votes_count").text(data.votes_count);
-
-                let minutes = Math.floor(data.timer / 60);
-                let remainingSeconds = data.timer % 60;
-                $('.timer').text(
-                    `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
-                );
-
-                let rows = data.employees.map((employee, index) => `
-            <tr>
-                <td class="text-center m-0"><h3>${index + 1}</h3></td>
-                <td class="px-0">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="avatar avatar-lg">
-                            <img alt="avatar" src="${employee.image || "{% static 'assets/images/default.webp' %}"}" class="rounded-circle"/>
-                        </div>
-                        <div>
-                            <h4 class="mb-0">${employee.name}</h4>
-                            <h5 class="text-secondary mb-0">${employee.position}</h5>
-                        </div>
+                $voteSummary.html(`
+                    <div class="text-center">
+                        <div id="chart"></div>
                     </div>
-                </td>
-                <td>
-                    <div class="d-flex align-items-center">
-                        <div style="font-size: 18px;" class="me-2"><span>${employee.percentage}%</span></div>
-                        <div class="progress w-100" style="height: 8px">
-                            <div class="progress-bar ${employee.percentage >= 50 ? "bg-success" : "bg-danger"}" role="progressbar"
-                                 style="width: ${employee.percentage}%" aria-valuenow="${employee.percentage}"
-                                 aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                </td>
-                <td style="text-align: center;"><h3>${employee.all_votes}</h3></td>
-                <td style="text-align: center;"><h3 class="text-success">${employee.true}</h3></td>
-                <td style="text-align: center;"><h3 class="text-danger">${employee.false}</h3></td>
-                <td style="text-align: center;"><h3>${employee.neutral}</h3></td>
-            </tr>
-        `).join('');
-                $("#employee_table").html(rows);
-            });
-        }
+                `);
+                const chart = new ApexCharts(document.querySelector("#chart"), options);
+                chart.render();
+            }
 
-        updateDashboard();
-
+            // Teacher data ni tozalash
+            function clearTeacherData() {
+                $('#teacher_data').html('');
+            }
+        });
     </script>
-
 {% endblock %}

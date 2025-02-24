@@ -144,6 +144,7 @@ class Employee(models.Model):
     def __str__(self):
         return self.full_name
 
+# models.py
 class SelectedEmployee(models.Model):
     TYPE = (
         ('professor', 'Professor'),
@@ -152,12 +153,13 @@ class SelectedEmployee(models.Model):
         ('katta_oqituvchi', 'Katta O\'qituvchi'),
         ('oqituvchi_stajyor', 'O\'qituvchi-stajyor'),
         ('o\'qituvchi', 'O\'qituvchi'),
-
     )
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='selected_employee')
     type = models.CharField(max_length=20, choices=TYPE, null=True)
     which_position = models.CharField(max_length=255, null=True)
     created_at = models.DateTimeField(null=True)
+    status = models.BooleanField(default=False)
+    voted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.employee.full_name

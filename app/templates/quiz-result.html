@@ -4,33 +4,32 @@
     Yakunlash
 {% endblock %}
 {% block content %}
-  <!-- Page Content -->
-  <main>
-    <section class="pt-5 pb-5">
-      <div class="container">
-        <div class="row mt-0 mt-md-4">
-          <div class="col-lg-3 col-md-4 col-12">
-          </div>
-          <div class="col-12">
-              <!-- card -->
-              <div class="card">
-                <!-- card body -->
-                <div class="card-body p-10 text-center">
-                  <!-- text -->
-                  <div class="mb-4">
-                    <div><i class="fe fe-check fs-1 fw-bold text-success"></i></div>
-                    <h2>Ovoz berish yakunlandi!</h2>
-                    <p class="mb-0 px-lg-8">{{ ipaddress }}</p>
-                  </div>
-                  <!-- btn -->
-                  <!-- <div class="mt-5">
-                    <a href="#" class="btn btn-primary">Finish</a>
-                  </div> -->
+    <!-- Page Content -->
+    <main>
+        <section class="pt-5 pb-5">
+            <div class="container">
+                <div class="row mt-0 mt-md-4">
+                    <div class="col-lg-3 col-md-4 col-12">
+                    </div>
+                    <div class="col-12">
+                        <!-- card -->
+                        <div class="card">
+                            <!-- card body -->
+                            <div class="card-body p-10 text-center">
+                                <!-- text -->
+                                <div class="mb-4">
+                                    <div><i class="fe fe-check fs-1 fw-bold text-success"></i></div>
+                                    <h2>Ovoz berish yakunlandi!</h2>
+
+                                </div>
+                                <div class="mt-5">
+                                    <a href="{% url 'teachers:start_vote' %}" class="btn btn-success">Keyingi nomzodga ovoz berish</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
+            </div>
+        </section>
+    </main>
 {% endblock %}
