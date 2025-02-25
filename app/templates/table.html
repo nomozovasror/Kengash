@@ -8,6 +8,21 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.js"></script>
+    <style>
+        .timer {
+            font-size: 24px;
+            color: #fff;
+            margin-left: 20px;
+            transition: color 0.3s ease;
+        }
+        .timer-warning {
+            color: #ff0000;
+        }
+        .timer{
+            font-size: 50px;
+            font-weight: bold;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -15,9 +30,11 @@
         <section class="py-4 py-lg-6 bg-secondary">
             <div class="container">
                 <div class="row">
-                    <div class="col-lg-12 col-md-12 col-12">
-                        <h1 class="text-white mb-1 display-4">Ovoz berishni boshlash</h1>
+                    <div class="col-lg-12 col-md-12 col-12 d-flex align-items-center justify-content-between">
+                        <div><h1 class="text-white mb-1 display-4">Ovoz berishni boshlash</h1></div>
+                        <div><span id="timer" class="timer"></span></div>
                     </div>
+
                 </div>
             </div>
         </section>
@@ -100,6 +117,41 @@
             let activeEmployeeId = null;
             let voteUpdateInterval = null;
             let latestVoteData = null;
+            let timerInterval = null;
+            let timeLeft = 30;
+
+            // Timer funktsiyasi
+            function startTimer() {
+                if (timerInterval) return;
+                timeLeft = 30;
+                $('#timer').text(`${timeLeft}`).removeClass('timer-warning');
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    $('#timer').text(`${timeLeft}`);
+
+                    // Oxirgi 10 soniyada rangni qizilga o‘zgartirish
+                    if (timeLeft <= 10) {
+                        $('#timer').addClass('timer-warning');
+                    } else {
+                        $('#timer').removeClass('timer-warning');
+                    }
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        $('#timer').text('0').addClass('timer-warning');
+                        // Hech qanday qo‘shimcha vazifa bajarilmaydi
+                    }
+                }, 1000);
+            }
+
+            function stopTimer() {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    $('#timer').text('').removeClass('timer-warning');
+                }
+            }
 
             // Har 5 sekundda ma'lumotlarni yangilash
             function startVoteUpdate() {
@@ -121,7 +173,7 @@
                                 console.error('Vote data AJAX error:', error);
                             }
                         });
-                    }, 5000);
+                    }, 2000);
                 }
             }
 
@@ -145,6 +197,7 @@
                             updateTeacherData(response);
                             disableOtherButtons($(`.start-btn[data-id="${activeEmployeeId}"]`));
                             startVoteUpdate();
+                            startTimer();
 
                             if (response.linked_employee) {
                                 const $linkedBtn = $(`.start-btn[data-id="${response.linked_employee.employee_id}"]`);
@@ -159,6 +212,7 @@
                             activeEmployeeId = null;
                             enableAllButtons();
                             clearTeacherData();
+                            stopTimer();
                         }
                     },
                     error: function (xhr, status, error) {
@@ -202,6 +256,7 @@
                                 disableOtherButtons($button);
                                 activeEmployeeId = employeeId;
                                 startVoteUpdate();
+                                startTimer();
 
                                 if (response.linked_employee_id) {
                                     const $linkedBtn = $(`.start-btn[data-id="${response.linked_employee_id}"]`);
@@ -229,6 +284,7 @@
                         .addClass('btn-warning')
                         .prop('disabled', false);
                     stopVoteUpdate();
+                    stopTimer();
                     showFinalData();
                 } else if ($button.text().trim() === 'Yakunlash') {
                     $.ajax({
@@ -249,6 +305,7 @@
                                 enableAllButtons();
                                 activeEmployeeId = null;
                                 clearTeacherData();
+                                stopTimer();
 
                                 if (response.linked_employee_id) {
                                     const $linkedBtn = $(`.start-btn[data-id="${response.linked_employee_id}"]`);
