@@ -52,11 +52,17 @@
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
                                                     <div class="d-flex align-items-center">
-                                                        <a href="#"><img
+                                                        <div class="row">
+                                                            <div class="col-sm-12 col-md-6 col-lg-6">
+                                                                                                                     <a href="#"><img
                                                                 src="{% if i.employee.image %}{{ i.employee.image }}{% else %}{% static 'assets/images/default.webp' %}{% endif %}"
                                                                 alt="course" style="width: 150px" class="rounded"/></a>
-                                                        <div class="ms-3">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-12 col-md-6 col-lg-6">
+                                                        <div class="ms-3 ms-sm-0">
                                                             <h3 class="mb-0"><a href="#" class="text-inherit">{{ i.employee.full_name }}</a></h3>
+                                                        </div>
                                                         </div>
                                                     </div>
                                                 </div>
