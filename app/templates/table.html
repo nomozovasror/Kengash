@@ -50,7 +50,7 @@
                                                 <td class="px-0">
                                                     <div class="d-flex align-items-center gap-3">
                                                         <div class="avatar avatar-lg">
-                                                            <img alt="avatar" src="{{ employee.employee.image }}" class="rounded-circle"/>
+                                                            <img alt="avatar" src="{{ employee.employee.image|default:'/static/default.jpg' }}" class="rounded-circle"/>
                                                         </div>
                                                         <div>
                                                             <h3 class="mb-0">{{ employee.employee.full_name }}</h3>
@@ -145,6 +145,16 @@
                             updateTeacherData(response);
                             disableOtherButtons($(`.start-btn[data-id="${activeEmployeeId}"]`));
                             startVoteUpdate();
+
+                            if (response.linked_employee) {
+                                const $linkedBtn = $(`.start-btn[data-id="${response.linked_employee.employee_id}"]`);
+                                if ($linkedBtn.length) {
+                                    $linkedBtn.text('Stop')
+                                        .removeClass('btn-success')
+                                        .addClass('btn-danger')
+                                        .prop('disabled', false);
+                                }
+                            }
                         } else {
                             activeEmployeeId = null;
                             enableAllButtons();
@@ -166,7 +176,6 @@
 
                 if ($button.text().trim() === 'Yakunlandi') return;
 
-                // Agar faol employee mavjud bo'lsa, yangi Start ga ruxsat berma
                 if (isStarting && activeEmployeeId && activeEmployeeId !== employeeId) {
                     alert('Hozirda boshqa ovoz berish jarayoni faol. Avval uni yakunlang.');
                     return;
@@ -193,6 +202,16 @@
                                 disableOtherButtons($button);
                                 activeEmployeeId = employeeId;
                                 startVoteUpdate();
+
+                                if (response.linked_employee_id) {
+                                    const $linkedBtn = $(`.start-btn[data-id="${response.linked_employee_id}"]`);
+                                    if ($linkedBtn.length) {
+                                        $linkedBtn.text('Stop')
+                                            .removeClass('btn-success')
+                                            .addClass('btn-danger')
+                                            .prop('disabled', false);
+                                    }
+                                }
                             } else {
                                 $button.prop('disabled', false);
                                 alert('Xatolik yuz berdi: ' + response.message);
@@ -230,6 +249,16 @@
                                 enableAllButtons();
                                 activeEmployeeId = null;
                                 clearTeacherData();
+
+                                if (response.linked_employee_id) {
+                                    const $linkedBtn = $(`.start-btn[data-id="${response.linked_employee_id}"]`);
+                                    if ($linkedBtn.length) {
+                                        $linkedBtn.text('Yakunlandi')
+                                            .removeClass('btn-warning')
+                                            .addClass('btn-light')
+                                            .prop('disabled', true);
+                                    }
+                                }
                             } else {
                                 $button.prop('disabled', false);
                                 alert('Xatolik yuz berdi: ' + response.message);
@@ -267,7 +296,7 @@
             // Teacher data ni yangilash
             function updateTeacherData(data) {
                 const totalVotes = data.votes[0] + data.votes[1] + data.votes[2];
-                $('#teacher_data').html(`
+                let htmlContent = `
                     <div class="row">
                         <div class="col-6">
                             <div class="d-flex align-items-center">
@@ -290,15 +319,50 @@
                             </div>
                         </div>
                     </div>
-                `);
+                `;
+
+                if (data.linked_employee) {
+                    const linkedTotalVotes = data.linked_employee.votes[0] + data.linked_employee.votes[1] + data.linked_employee.votes[2];
+                    htmlContent += `
+                        <div class="row mt-4">
+                            <div class="col-6">
+                                <div class="d-flex align-items-center">
+                                    <img src="${data.linked_employee.image}" alt="course" style="width: 200px" class="rounded">
+                                    <div class="ms-3">
+                                        <h2 class="mb-0 border-bottom"><a href="#" class="text-inherit">${data.linked_employee.full_name}</a></h2>
+                                        <div>
+                                            <h4>Tug‘ilgan yili: <span class="text-secondary">${data.linked_employee.birth_date}</span></h4>
+                                            <h4>Kafedra: <span class="text-secondary">${data.linked_employee.chair}</span></h4>
+                                            <h4>Lavozimi: <span class="text-secondary">${data.linked_employee.position}</span></h4>
+                                            <h4>Ilmiy daraja: <span class="text-secondary">${data.linked_employee.degree}</span></h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 d-flex justify-content-center align-items-center" id="linked_vote_summary">
+                                <div class="text-center" id="linked_show_all_data">
+                                    <h1 style="font-size: 58px">${linkedTotalVotes}</h1>
+                                    <h2 class="text-secondary">Nafar kishi ovoz berdi</h2>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                $('#teacher_data').html(htmlContent);
             }
 
             // Yakuniy ma'lumotlarni pie chart bilan ko'rsatish
             function showFinalData() {
-                const $voteSummary = $('#vote_summary');
                 if (!latestVoteData) return;
 
                 const voteList = [latestVoteData.votes[0], latestVoteData.votes[1], latestVoteData.votes[2]];
+                const linkedVoteList = latestVoteData.linked_employee ?
+                    [latestVoteData.linked_employee.votes[0], latestVoteData.linked_employee.votes[1], latestVoteData.linked_employee.votes[2]] : null;
+
+                const $voteSummary = $('#vote_summary');
+                const $linkedVoteSummary = $('#linked_vote_summary');
+
                 let options = {
                     series: voteList,
                     chart: {
@@ -339,13 +403,21 @@
                     }]
                 };
 
-                $voteSummary.html(`
-                    <div class="text-center">
-                        <div id="chart"></div>
-                    </div>
-                `);
+                $voteSummary.html(`<div id="chart"></div>`);
                 const chart = new ApexCharts(document.querySelector("#chart"), options);
                 chart.render();
+
+                if (linkedVoteList && $linkedVoteSummary.length) {
+                    let linkedOptions = { ...options, series: linkedVoteList };
+                    linkedOptions.dataLabels.formatter = function (val, opts) {
+                        let total = linkedVoteList.reduce((acc, curr) => acc + curr, 0);
+                        let count = linkedVoteList[opts.seriesIndex];
+                        return `${count} ta (${val.toFixed(1)}%)`;
+                    };
+                    $linkedVoteSummary.html(`<div id="linked_chart"></div>`);
+                    const linkedChart = new ApexCharts(document.querySelector("#linked_chart"), linkedOptions);
+                    linkedChart.render();
+                }
             }
 
             // Teacher data ni tozalash

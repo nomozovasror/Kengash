@@ -160,6 +160,8 @@ class SelectedEmployee(models.Model):
     created_at = models.DateTimeField(null=True)
     status = models.BooleanField(default=False)
     voted = models.BooleanField(default=False)
+    linked_employee = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,
+                                        related_name='linked_to')
 
     def __str__(self):
         return self.employee.full_name

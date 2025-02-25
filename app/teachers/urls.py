@@ -21,8 +21,6 @@ urlpatterns = [
     path('get_timer/', get_timer, name='get_timer'),
 
 
-
-
     path('update_employee_status/', UpdateEmployeeStatusView.as_view(), name='update_employee_status'),
     path('start_vote/', start_vote, name='start_vote'),
 

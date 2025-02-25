@@ -29,13 +29,16 @@ admin.site.register(VotingTimer)
 
 @admin.register(SelectedEmployee)
 class SelectedEmployeeAdmin(admin.ModelAdmin):
-    raw_id_fields = ['employee']
-    list_display = ['employee']
+    list_display = ['employee', 'type', 'status', 'voted', 'linked_employee']
+    list_filter = ['status', 'voted']
+    search_fields = ['employee__full_name']
 
 
 
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     search_fields = ['full_name']
+
+
 
 

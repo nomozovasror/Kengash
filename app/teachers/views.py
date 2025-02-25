@@ -226,13 +226,26 @@ class UpdateEmployeeStatusView(View):
             voted = request.POST.get('voted') == 'true'
 
             employee = SelectedEmployee.objects.get(id=employee_id)
+
+            # Agar status True bo‘lsa, boshqa faol employeelarni o‘chirish
+            if status:
+                SelectedEmployee.objects.exclude(id=employee_id).update(status=False)
+
             employee.status = status
             employee.voted = voted
+
+            # Bog‘langan employee ni faollashtirish/yakunlash
+            if employee.linked_employee:
+                employee.linked_employee.status = status
+                employee.linked_employee.voted = voted
+                employee.linked_employee.save()
+
             employee.save()
 
             return JsonResponse({
                 'status': 'success',
-                'message': 'Status successfully updated'
+                'message': 'Status successfully updated',
+                'linked_employee_id': employee.linked_employee.id if employee.linked_employee else None
             })
         except SelectedEmployee.DoesNotExist:
             return JsonResponse({
@@ -342,7 +355,7 @@ def get_result_data(request):
 
 
 def get_vote_data(request):
-    employee_id = request.GET.get('employee_id')  # Frontenddan kelgan employee_id ni olish
+    employee_id = request.GET.get('employee_id')
     if employee_id:
         active_employee = SelectedEmployee.objects.filter(id=employee_id, status=True, voted=False).first()
     else:
@@ -352,21 +365,46 @@ def get_vote_data(request):
         votes = Vote.objects.filter(employee=active_employee)
         dt = datetime.datetime.fromtimestamp(int(active_employee.employee.birth_timestamp))
         vote_counts = [
-            votes.filter(vote='qarshi').count(),  # Qarshi birinchi bo‘lsin (frontendda moslashtiramiz)
+            votes.filter(vote='qarshi').count(),
             votes.filter(vote='rozi').count(),
             votes.filter(vote='betaraf').count()
         ]
+
+        # Bog‘langan employee ma'lumotlari
+        linked_employee_data = None
+        linked_employee = active_employee.linked_employee
+        if linked_employee and linked_employee.status and not linked_employee.voted:
+            linked_votes = Vote.objects.filter(employee=linked_employee)
+            linked_vote_counts = [
+                linked_votes.filter(vote='qarshi').count(),
+                linked_votes.filter(vote='rozi').count(),
+                linked_votes.filter(vote='betaraf').count()
+            ]
+            linked_dt = datetime.datetime.fromtimestamp(int(linked_employee.employee.birth_timestamp))
+            linked_employee_data = {
+                'employee_id': linked_employee.id,
+                'full_name': linked_employee.employee.full_name,
+                'image': linked_employee.employee.image if linked_employee.employee.image else '/static/default.jpg',
+                'birth_date': linked_dt.strftime('%d.%m.%Y'),
+                'chair': linked_employee.employee.department.first().department.name,
+                'position': linked_employee.employee.department.first().employee_position.name,
+                'degree': linked_employee.employee.academicDegree.name,
+                'which_position': linked_employee.which_position,
+                'votes': linked_vote_counts
+            }
+
         return JsonResponse({
             'status': 'success',
             'employee_id': active_employee.id,
             'full_name': active_employee.employee.full_name,
-            'image': active_employee.employee.image,
+            'image': active_employee.employee.image if active_employee.employee.image else '/static/default.jpg',
             'birth_date': dt.strftime('%d.%m.%Y'),
             'chair': active_employee.employee.department.first().department.name,
             'position': active_employee.employee.department.first().employee_position.name,
             'degree': active_employee.employee.academicDegree.name,
             'which_position': active_employee.which_position,
-            'votes': vote_counts
+            'votes': vote_counts,
+            'linked_employee': linked_employee_data  # Bog‘langan employee qo‘shildi
         })
     return JsonResponse({
         'status': 'no_active',
