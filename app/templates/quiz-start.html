@@ -4,25 +4,24 @@
 {% block title %}Ovoz berish{% endblock %}
 {% block link %}
     <link rel="stylesheet" href="{% static 'assets/libs/bs-stepper/dist/css/bs-stepper.min.css' %}"/>
-
     <style>
-
         .yes_btn .btn-check:checked + .btn {
             background-color: #14A44D !important;
         }
-
         .no_btn .btn-check:checked + .btn {
             background-color: #dc3545 !important;
+        }
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     </style>
 {% endblock %}
 
-<!-- Page Content -->
 {% block content %}
     <main>
         <section class="pt-5 pb-5">
             <div class="container">
-                <!-- Content -->
                 <div class="row mt-0 mt-md-4">
                     <div class="col-lg-3 col-md-4 col-12">
                     </div>
@@ -50,64 +49,36 @@
                                     <div id="test-l-{{ forloop.counter }}" role="tabpanel"
                                          class="bs-stepper-pane fade question_block">
                                         <div class="card mb-4">
-                                            <!-- Card body -->
                                             <div class="card-body">
-                                                <!-- quiz -->
                                                 <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
                                                     <div class="d-flex align-items-center">
-                                                        <!-- quiz img -->
                                                         <a href="#"><img
-                                                                src="
-
-
-                                                                        {% if i.employee.image %}{{ i.employee.image }}{% else %}{% static 'assets/images/default.webp' %}{% endif %}"
-                                                                alt="course"
-                                                                style="width: 150px"
-                                                                class="rounded"/></a>
-                                                        <!-- quiz content -->
+                                                                src="{% if i.employee.image %}{{ i.employee.image }}{% else %}{% static 'assets/images/default.webp' %}{% endif %}"
+                                                                alt="course" style="width: 150px" class="rounded"/></a>
                                                         <div class="ms-3">
-                                                            <h3 class="mb-0"><a href="#"
-                                                                                class="text-inherit">{{ i.employee.full_name }}</a>
-                                                            </h3>
-                                                            <div class="ms-3">
-                                                            </div>
+                                                            <h3 class="mb-0"><a href="#" class="text-inherit">{{ i.employee.full_name }}</a></h3>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <!-- text -->
                                                 <div>
                                                     <div>
                                                         <div class="d-flex flex-column justify-content-between border-bottom py-2">
-                                                            <h3>Tug‘ilgan yili: <span
-                                                                    class="text-secondary">{{ i.employee.birth_timestamp|timestamp_to_date }}</span>
-                                                            </h3>
+                                                            <h3>Tug‘ilgan yili: <span class="text-secondary">{{ i.employee.birth_timestamp|timestamp_to_date }}</span></h3>
                                                         </div>
                                                         <div class="d-flex flex-column justify-content-between pt-2">
-                                                            <h3>Kafedra: <span
-                                                                    class="text-secondary">{{ i.employee.department.first.department }}</span>
-                                                            </h3>
+                                                            <h3>Kafedra: <span class="text-secondary">{{ i.employee.department.first.department }}</span></h3>
                                                         </div>
                                                         <div class="d-flex flex-column justify-content-between pt-2">
-                                                            <h3>Lavozimi: <span
-                                                                    class="text-secondary">{{ i.employee.department.first.employee_position }}</span>
-                                                            </h3>
+                                                            <h3>Lavozimi: <span class="text-secondary">{{ i.employee.department.first.employee_position }}</span></h3>
                                                         </div>
                                                         <div class="d-flex flex-column justify-content-between pt-2">
-                                                            <h3>Ilmiy daraja: <span
-                                                                    class="text-secondary">{{ i.employee.academicDegree }}</span>
-                                                            </h3>
-
+                                                            <h3>Ilmiy daraja: <span class="text-secondary">{{ i.employee.academicDegree }}</span></h3>
                                                         </div>
-                                                        {#                                                        <div class="d-flex flex-column justify-content-between pt-2">#}
-                                                        {#                                                            <h3>Hujjatlarining talab darajasida mosligi:</h3>#}
-                                                        {#                                                            <span class="text-dark">{{ i.equal }}</span>#}
-                                                        {#                                                        </div>#}
                                                     </div>
                                                     <h2 class="mb-3 mt-4">{{ i.which_position }}</h2>
 
-                                                    <!-- buttons -->
-                                                    <div class="d-grid mb-2 yes_btn" role="group"
-                                                         aria-label="Basic radio toggle button group">
+                                                    <!-- Radiobuttons -->
+                                                    <div class="d-grid mb-2 yes_btn" role="group">
                                                         <input type="radio" class="btn-check"
                                                                name="{{ i.employee.employee_id_number }}"
                                                                value="rozi"
@@ -115,7 +86,6 @@
                                                         <label class="btn btn-outline-secondary text-start"
                                                                for="{{ i.employee.employee_id_number }}Rozi">Roziman</label>
                                                     </div>
-                                                    <!-- buttons -->
                                                     <div class="d-grid mb-2 no_btn">
                                                         <input type="radio" class="btn-check"
                                                                name="{{ i.employee.employee_id_number }}"
@@ -135,19 +105,16 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <!-- Button -->
                                         <div class="mt-3 d-flex justify-content-end">
                                             {% if not forloop.last %}
                                                 <button type="button" class="btn btn-primary keyingi" disabled
                                                         onclick="courseForm.next(); sendVote('{{ i.employee.employee_id_number }}', false)">
-                                                    Keyingisi
-                                                    <i class="fe fe-arrow-right"></i>
+                                                    Keyingisi <i class="fe fe-arrow-right"></i>
                                                 </button>
                                             {% else %}
                                                 <button type="button" class="btn btn-primary keyingi" disabled
                                                         onclick="courseForm.next(); sendVote('{{ i.employee.employee_id_number }}', true)">
-                                                    Yakunlash
-                                                    <i class="fe fe-arrow-right"></i>
+                                                    Yakunlash <i class="fe fe-arrow-right"></i>
                                                 </button>
                                             {% endif %}
                                         </div>
@@ -160,10 +127,10 @@
             </div>
         </section>
     </main>
+
     <script src="{% static 'assets/libs/bs-stepper/dist/js/bs-stepper.min.js' %}"></script>
     <script src="{% static 'assets/js/vendors/beStepper.js' %}"></script>
     <script>
-
         function sendVote(id, is_last) {
             let radioBtn = document.querySelector(`input[name="${id}"]:checked`);
             if (radioBtn) {
@@ -188,15 +155,33 @@
                     })
                     .then(data => {
                         if (data.success) {
-                            console.log("Vote recorded successfully");
+                            console.log("Vote recorded:", data.message);
+                            updateRadioButtons(data.employee_id, data.vote);
                             if (data.is_last) {
                                 window.location.href = "{% url 'teachers:home' %}";
                             }
                         } else {
-                            console.log("Error recording vote:", data.message);
+                            alert(data.message);
                         }
-                    }).catch(error => {
-                    console.error("Error:", error);
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                    });
+            }
+        }
+
+        function updateRadioButtons(employeeId, vote) {
+            // Agar tanlangan employee "rozi" bo‘lsa, bog‘langan employee uchun "rozi" ni bloklash
+            if (vote === 'rozi') {
+                document.querySelectorAll('.question_block').forEach(block => {
+                    const currentId = block.querySelector('input[type="radio"]').name;
+                    if (currentId !== employeeId) {  // Joriy employee emas, balki bog‘langan bo‘lishi mumkin
+                        const roziBtn = block.querySelector(`input[value="rozi"]`);
+                        if (roziBtn) {
+                            roziBtn.disabled = true;
+                            roziBtn.nextElementSibling.classList.add('disabled');
+                        }
+                    }
                 });
             }
         }
@@ -204,26 +189,26 @@
         function checkRadio() {
             let questions = document.querySelectorAll(".question_block");
 
-            questions.forEach((question, index) => {
+            questions.forEach((question) => {
                 let btn = question.querySelector('.keyingi');
                 let radioBtns = question.querySelectorAll('input[type="radio"]');
 
                 radioBtns.forEach((radioBtn) => {
                     radioBtn.addEventListener('change', () => {
-                        let allAnswered = true;
+                        // Har bir savol uchun mustaqil tekshirish
+                        const selected = question.querySelector('input[type="radio"]:checked');
+                        btn.disabled = !selected;
 
-                        questions.forEach((q) => {
-                            const selected = q.querySelector('input[type="radio"]:checked');
-                            if (!selected) {
-                                allAnswered = false;
-                            }
-                        });
-                        btn.disabled = allAnswered;
-                        if (index === questions.length - 1) {
-                            btn.disabled = !allAnswered;
+                        // Agar "rozi" tanlansa, bog‘langan employee uchun "rozi" ni bloklash
+                        if (radioBtn.value === 'rozi' && radioBtn.checked) {
+                            updateRadioButtons(radioBtn.name, 'rozi');
                         }
                     });
                 });
+
+                // Dastlabki holatda tekshirish
+                const selected = question.querySelector('input[type="radio"]:checked');
+                btn.disabled = !selected;
             });
         }
 

@@ -275,26 +275,52 @@ def start_vote(request):
         return redirect('teachers:finish_vote')
 
 
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.http import JsonResponse
+from .models import SelectedEmployee, Vote
+from django.shortcuts import get_object_or_404
+import json
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class VoteView(View):
     def post(self, request):
         data = json.loads(request.body)
-        employee_id = data.get('employee_id')
+        employee_id = data.get('employee_id')  # Bu employee_id_number
         vote = data.get('vote')
         is_last = data.get('is_last')
 
-        session_id = get_session_id(request)
+        session_id = get_session_id(request)  # get_session_id funktsiyasi mavjud deb taxmin qilamiz
 
         selected_employee = get_object_or_404(SelectedEmployee, employee__employee_id_number=employee_id)
 
+        # Agar ushbu employee uchun allaqachon ovoz berilgan bo‘lsa
         if Vote.objects.filter(employee=selected_employee, session_id=session_id).exists():
-            return JsonResponse({'success': False, 'message': "You have already voted.", })
+            return JsonResponse({'success': False, 'message': "You have already voted."})
 
+        # Bog‘langan employee tekshiruvi
+        linked_employee = selected_employee.linked_employee
+        if linked_employee:
+            linked_vote = Vote.objects.filter(employee=linked_employee, session_id=session_id).first()
+            if linked_vote and linked_vote.vote == 'rozi' and vote == 'rozi':
+                return JsonResponse({'success': False,
+                                     'message': "Linked employee already voted 'Roziman'. You cannot vote 'Roziman' for this employee."})
+
+        # Ovoz berishni yaratish
         Vote.objects.create(employee=selected_employee, vote=vote, session_id=session_id)
-        if is_last:
-            return JsonResponse({'success': True, 'message': "Your vote has been recorded.", 'is_last': True})
 
-        return JsonResponse({'success': True, 'message': "Your vote has been recorded."})
+        response_data = {
+            'success': True,
+            'message': "Your vote has been recorded.",
+            'employee_id': employee_id,
+            'vote': vote
+        }
+        if is_last:
+            response_data['is_last'] = True
+
+        return JsonResponse(response_data)
 
 def dashboard(request):
     return render(request, 'counter.html')
