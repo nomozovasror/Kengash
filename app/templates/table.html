@@ -57,60 +57,16 @@
             <!-- Bu yerda qatorlar JavaScript orqali qo'shiladi -->
         </tbody>
     </table>
+
 </div>
-{#                        <table class="table mb-0 text-nowrap table-hover table-centered">#}
-{#                            <thead>#}
-{#                                <tr style="font-size: 20px">#}
-{#                                    <th class="text-center px-1" style="width: 30px">#</th>#}
-{#                                    <th>F.I.SH</th>#}
-{#                                    <th>Boshlash</th>#}
-{#                                </tr>#}
-{#                            </thead>#}
-{#                            <tbody id="employee_table">#}
-{#                                {% for employee in selected_employees %}#}
-{#                                    <tr data-id="{{ employee.id }}">#}
-{#                                        <td class="text-center px-1" style="width: 30px"><h4>{{ forloop.counter }}</h4></td>#}
-{#                                        <td class="px-0">#}
-{#                                            <div class="d-flex align-items-center gap-3">#}
-{#                                                <div class="avatar avatar-lg">#}
-{#                                                    <img alt="avatar" src="{{ employee.employee.image|default:'/static/default.jpg' }}" class="rounded-circle"/>#}
-{#                                                </div>#}
-{#                                                <div>#}
-{#                                                    <h3 class="mb-0">{{ employee.employee.full_name }}</h3>#}
-{#                                                    <h4 class="text-secondary mb-0">{{ employee.employee.position }}</h4>#}
-{#                                                </div>#}
-{#                                            </div>#}
-{#                                        </td>#}
-{#                                        <td>#}
-{#                                            <button class="btn btn-sm start-btn btn-success w-50"#}
-{#                                                    data-id="{{ employee.id }}"#}
-{#                                                    data-fullname="{{ employee.employee.full_name }}"#}
-{#                                                    {% if employee.voted %}#}
-{#                                                        disabled#}
-{#                                                        class="btn btn-light"#}
-{#                                                    {% elif employee.status %}#}
-{#                                                        class="btn btn-danger"#}
-{#                                                    {% else %}#}
-{#                                                        class="btn btn-success"#}
-{#                                                    {% endif %}>#}
-{#                                                {% if employee.voted %}#}
-{#                                                    Yakunlandi#}
-{#                                                {% elif employee.status %}#}
-{#                                                    Stop#}
-{#                                                {% else %}#}
-{#                                                    Start#}
-{#                                                {% endif %}#}
-{#                                            </button>#}
-{#                                        </td>#}
-{#                                    </tr>#}
-{#                                {% endfor %}#}
-{#                            </tbody>#}
-{#                        </table>#}
+
                     </div>
                 </div>
             </div>
         </div>
+        <div class="d-flex justify-content-end"> <a href="{% url 'teachers:get_result' %}" class="btn btn-secondary">Barcha natijalar</a> </div>
     </div>
+
 </div>
         </section>
     </main>
