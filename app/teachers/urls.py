@@ -10,6 +10,7 @@ urlpatterns = [
     path('vote/', VoteView.as_view(), name='vote'),
 
     path('start/', start, name='start'),
+    path('get-employee-list/', get_employee_list, name='get_employee_list'),
     path('dashboard/', dashboard, name='dashboard'),
     path('api/dashboard-data/', get_dashboard_data, name='get_dashboard_data'),
     path('dashboard/result', get_result, name='get_result'),

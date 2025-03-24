@@ -8,109 +8,183 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.js"></script>
+
     <style>
         .timer {
-            font-size: 24px;
-            color: #fff;
-            margin-left: 20px;
+            font-size: 200px;
+            font-weight: bold;
+            color: #333;
             transition: color 0.3s ease;
         }
         .timer-warning {
             color: #ff0000;
-        }
-        .timer{
-            font-size: 100px;
-            font-weight: bold;
         }
     </style>
 {% endblock %}
 
 {% block content %}
     <main>
-        <section class=" py-1 bg-secondary">
+        <section class="py-5 bg-secondary">
             <div class="container">
                 <div class="row">
-                    <div class="col-lg-12 col-md-12 col-12 d-flex align-items-center justify-content-between">
-                        <div><h1 class="text-white mb-1 display-4">Ovoz berishni boshlash</h1></div>
-                        <div><span id="timer" class="timer"></span></div>
+                    <div class="col-lg-12 col-md-12 col-12">
+                        <h1 class="text-white mb-1 display-4">Ovoz berishni boshlash</h1>
                     </div>
-
                 </div>
             </div>
         </section>
         <section class="pt-5 pb-5">
             <div class="container">
-                <div class="row mt-0 mt-md-4">
-                    <div class="col-sm-12 col-md-12 mb-3">
-                        <div class="card border-0 mb-3">
-                            <div class="card-body" id="teacher_data">
-                                <!-- Ovoz berish ma'lumotlari bu yerga keladi -->
-                            </div>
-                        </div>
+    <div class="row mt-0 mt-md-4">
+        <div class="col-12 mb-3">
+            <!-- Search input -->
+            <div class="mb-3">
+                <input type="text" id="searchInput" class="form-control" placeholder="F.I.SH bo'yicha qidirish...">
+            </div>
+            <!-- Jadval -->
+            <div class="card border-0">
+                <div class="card-body p-10">
+<div class="table-responsive">
+    <table class="table mb-0 text-nowrap table-hover table-centered" id="employee_table">
+        <thead>
+            <tr style="font-size: 20px">
+                <th class="text-center px-1" style="width: 30px">#</th>
+                <th>F.I.SH</th>
+                <th>Boshlash</th>
+            </tr>
+        </thead>
+        <tbody id="employee_table_body">
+            <!-- Bu yerda qatorlar JavaScript orqali qo'shiladi -->
+        </tbody>
+    </table>
+</div>
+{#                        <table class="table mb-0 text-nowrap table-hover table-centered">#}
+{#                            <thead>#}
+{#                                <tr style="font-size: 20px">#}
+{#                                    <th class="text-center px-1" style="width: 30px">#</th>#}
+{#                                    <th>F.I.SH</th>#}
+{#                                    <th>Boshlash</th>#}
+{#                                </tr>#}
+{#                            </thead>#}
+{#                            <tbody id="employee_table">#}
+{#                                {% for employee in selected_employees %}#}
+{#                                    <tr data-id="{{ employee.id }}">#}
+{#                                        <td class="text-center px-1" style="width: 30px"><h4>{{ forloop.counter }}</h4></td>#}
+{#                                        <td class="px-0">#}
+{#                                            <div class="d-flex align-items-center gap-3">#}
+{#                                                <div class="avatar avatar-lg">#}
+{#                                                    <img alt="avatar" src="{{ employee.employee.image|default:'/static/default.jpg' }}" class="rounded-circle"/>#}
+{#                                                </div>#}
+{#                                                <div>#}
+{#                                                    <h3 class="mb-0">{{ employee.employee.full_name }}</h3>#}
+{#                                                    <h4 class="text-secondary mb-0">{{ employee.employee.position }}</h4>#}
+{#                                                </div>#}
+{#                                            </div>#}
+{#                                        </td>#}
+{#                                        <td>#}
+{#                                            <button class="btn btn-sm start-btn btn-success w-50"#}
+{#                                                    data-id="{{ employee.id }}"#}
+{#                                                    data-fullname="{{ employee.employee.full_name }}"#}
+{#                                                    {% if employee.voted %}#}
+{#                                                        disabled#}
+{#                                                        class="btn btn-light"#}
+{#                                                    {% elif employee.status %}#}
+{#                                                        class="btn btn-danger"#}
+{#                                                    {% else %}#}
+{#                                                        class="btn btn-success"#}
+{#                                                    {% endif %}>#}
+{#                                                {% if employee.voted %}#}
+{#                                                    Yakunlandi#}
+{#                                                {% elif employee.status %}#}
+{#                                                    Stop#}
+{#                                                {% else %}#}
+{#                                                    Start#}
+{#                                                {% endif %}#}
+{#                                            </button>#}
+{#                                        </td>#}
+{#                                    </tr>#}
+{#                                {% endfor %}#}
+{#                            </tbody>#}
+{#                        </table>#}
                     </div>
-                    <div class="col-12 mb-3">
-                        <div class="card border-0">
-                            <div class="card-body p-10">
-                                <div class="table-responsive">
-                                    <table class="table mb-0 text-nowrap table-hover table-centered">
-                                        <thead>
-                                        <tr style="font-size: 20px">
-                                            <th class="text-center px-1" style="width: 30px">#</th>
-                                            <th>F.I.SH</th>
-                                            <th>Boshlash</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody id="employee_table">
-                                        {% for employee in selected_employees %}
-                                            <tr data-id="{{ employee.id }}">
-                                                <td class="text-center px-1" style="width: 30px"><h4>{{ forloop.counter }}</h4></td>
-                                                <td class="px-0">
-                                                    <div class="d-flex align-items-center gap-3">
-                                                        <div class="avatar avatar-lg">
-                                                            <img alt="avatar" src="{{ employee.employee.image|default:'/static/default.jpg' }}" class="rounded-circle"/>
-                                                        </div>
-                                                        <div>
-                                                            <h3 class="mb-0">{{ employee.employee.full_name }}</h3>
-                                                            <h4 class="text-secondary mb-0">{{ employee.employee.position }}</h4>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <button class="btn btn-sm start-btn btn-success w-50"
-                                                            data-id="{{ employee.id }}"
-                                                            data-fullname="{{ employee.employee.full_name }}"
-                                                            {% if employee.voted %}
-                                                                disabled
-                                                                class="btn btn-light"
-                                                            {% elif employee.status %}
-                                                                class="btn btn-danger"
-                                                            {% else %}
-                                                                class="btn btn-success"
-                                                            {% endif %}>
-                                                        {% if employee.voted %}
-                                                            Yakunlandi
-                                                        {% elif employee.status %}
-                                                            Stop
-                                                        {% else %}
-                                                            Start
-                                                        {% endif %}
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="d-flex justify-content-end">
-                    <a href="{% url 'teachers:get_result' %}" class="btn btn-secondary">Barcha natijalar</a>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
         </section>
     </main>
+
+    <!-- Modal -->
+    <div class="modal fade" id="voteModal" tabindex="-1" aria-labelledby="voteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-white text-white p-0">
+                      <div class="d-flex justify-content-center w-100">
+                        <div id="timer" class="timer"></div>
+                        <button type="button" style="position: absolute; top: 10px; right: 10px;" class="btn-close btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                    </div>
+                </div>
+                <div class="modal-body pt-0">
+
+                    <div id="teacher_data" class="card-body">
+                        <!-- Teacher data will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function updateEmployeeTable() {
+        $.ajax({
+            url: "{% url 'teachers:get_employee_list' %}",  // URLni o'z loyihangizga moslang
+            type: 'GET',
+            success: function (response) {
+                const employees = response.employees;
+                const tableBody = $('#employee_table_body');
+                tableBody.empty();
+
+                employees.forEach((employee, index) => {
+                    const row = `
+
+
+
+                        <tr data-id="${employee.id}">
+                            <td class="text-center px-1" style="width: 30px"><h3>${index + 1}</h3></td>
+                            <td class="px-0">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar avatar-lg">
+                                        <img alt="avatar" src="${employee.image}" class="rounded-circle"/>
+                                    </div>
+                                    <div>
+                                        <h3 class="mb-0">${employee.full_name}</h3>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm start-btn btn-success w-50"
+                                        data-id="${employee.id}"
+                                        data-fullname="${employee.full_name}"
+                                        ${employee.voted ? 'disabled class="btn btn-light"' : employee.status ? 'class="btn btn-danger"' : 'class="btn btn-success"'}>
+                                    ${employee.voted ? 'Yakunlandi' : employee.status ? 'Stop' : 'Start'}
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.append(row);
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error('Jadvalni yangilashda xatolik:', error);
+            }
+        });
+    }
+
+
+    updateEmployeeTable();
+</script>
 
     <script>
         $(document).ready(function () {
@@ -119,28 +193,28 @@
             let latestVoteData = null;
             let timerInterval = null;
             let timeLeft = 30;
+            const modal = new bootstrap.Modal(document.getElementById('voteModal'));
+            const timerSound = new Audio('{% static "timer_sound.mp3" %}');
 
-            // Timer funktsiyasi
+            // Timer funksiyasi
             function startTimer() {
                 if (timerInterval) return;
                 timeLeft = 30;
                 $('#timer').text(`${timeLeft}`).removeClass('timer-warning');
+                timerSound.play();
                 timerInterval = setInterval(() => {
                     timeLeft--;
                     $('#timer').text(`${timeLeft}`);
-
-                    // Oxirgi 10 soniyada rangni qizilga o‘zgartirish
                     if (timeLeft <= 10) {
                         $('#timer').addClass('timer-warning');
                     } else {
                         $('#timer').removeClass('timer-warning');
                     }
-
                     if (timeLeft <= 0) {
                         clearInterval(timerInterval);
                         timerInterval = null;
                         $('#timer').text('0').addClass('timer-warning');
-                        // Hech qanday qo‘shimcha vazifa bajarilmaydi
+                        endVotingAutomatically();
                     }
                 }, 1000);
             }
@@ -153,7 +227,6 @@
                 }
             }
 
-            // Har 5 sekundda ma'lumotlarni yangilash
             function startVoteUpdate() {
                 if (!voteUpdateInterval && activeEmployeeId) {
                     voteUpdateInterval = setInterval(function () {
@@ -177,7 +250,6 @@
                 }
             }
 
-            // Yangilanishni to'xtatish
             function stopVoteUpdate() {
                 if (voteUpdateInterval) {
                     clearInterval(voteUpdateInterval);
@@ -185,7 +257,6 @@
                 }
             }
 
-            // Faol holatni tekshirish va UI ni yangilash
             function checkActiveEmployee() {
                 $.ajax({
                     url: "{% url 'teachers:get_vote_data' %}",
@@ -196,18 +267,9 @@
                             latestVoteData = response;
                             updateTeacherData(response);
                             disableOtherButtons($(`.start-btn[data-id="${activeEmployeeId}"]`));
+                            modal.show();
                             startVoteUpdate();
                             startTimer();
-
-                            if (response.linked_employee) {
-                                const $linkedBtn = $(`.start-btn[data-id="${response.linked_employee.employee_id}"]`);
-                                if ($linkedBtn.length) {
-                                    $linkedBtn.text('Stop')
-                                        .removeClass('btn-success')
-                                        .addClass('btn-danger')
-                                        .prop('disabled', false);
-                                }
-                            }
                         } else {
                             activeEmployeeId = null;
                             enableAllButtons();
@@ -222,115 +284,120 @@
             }
 
             // Tugma hodisasi
-            $('.start-btn').click(function () {
-                const $button = $(this);
-                const employeeId = $button.data('id');
-                const isStarting = $button.text().trim() === 'Start';
-                const isStopping = $button.text().trim() === 'Stop';
+            $('#employee_table_body').on('click', '.start-btn', function () {
+        const $button = $(this);
+        const employeeId = $button.data('id');
 
-                if ($button.text().trim() === 'Yakunlandi') return;
+        if ($button.text().trim() === 'Yakunlandi') return;
 
-                if (isStarting && activeEmployeeId && activeEmployeeId !== employeeId) {
-                    alert('Hozirda boshqa ovoz berish jarayoni faol. Avval uni yakunlang.');
-                    return;
-                }
+        if (activeEmployeeId && activeEmployeeId !== employeeId) {
+            alert('Hozirda boshqa ovoz berish jarayoni faol. Avval uni yakunlang.');
+            return;
+        }
 
-                $button.prop('disabled', true);
+        $button.prop('disabled', true);
 
-                if (isStarting) {
-                    $.ajax({
-                        url: "{% url 'teachers:update_employee_status' %}",
-                        type: 'POST',
-                        data: {
-                            'employee_id': employeeId,
-                            'status': true,
-                            'voted': false,
-                            'csrfmiddlewaretoken': '{{ csrf_token }}'
-                        },
-                        success: function (response) {
-                            if (response.status === 'success') {
-                                $button.text('Stop')
-                                    .removeClass('btn-success')
-                                    .addClass('btn-danger')
-                                    .prop('disabled', false);
-                                disableOtherButtons($button);
-                                activeEmployeeId = employeeId;
-                                startVoteUpdate();
-                                startTimer();
-
-                                if (response.linked_employee_id) {
-                                    const $linkedBtn = $(`.start-btn[data-id="${response.linked_employee_id}"]`);
-                                    if ($linkedBtn.length) {
-                                        $linkedBtn.text('Stop')
-                                            .removeClass('btn-success')
-                                            .addClass('btn-danger')
-                                            .prop('disabled', false);
-                                    }
-                                }
-                            } else {
-                                $button.prop('disabled', false);
-                                alert('Xatolik yuz berdi: ' + response.message);
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            $button.prop('disabled', false);
-                            alert('Server bilan bog‘lanishda xatolik yuz berdi');
-                            console.error('AJAX error:', error);
-                        }
-                    });
-                } else if (isStopping) {
-                    $button.text('Yakunlash')
-                        .removeClass('btn-danger')
-                        .addClass('btn-warning')
+        $.ajax({
+            url: "{% url 'teachers:update_employee_status' %}",
+            type: 'POST',
+            data: {
+                'employee_id': employeeId,
+                'status': true,
+                'voted': false,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function (response) {
+                if (response.status === 'success') {
+                    $button.text('Stop')
+                        .removeClass('btn-success')
+                        .addClass('btn-danger')
                         .prop('disabled', false);
-                    stopVoteUpdate();
-                    stopTimer();
-                    showFinalData();
-                } else if ($button.text().trim() === 'Yakunlash') {
-                    $.ajax({
-                        url: "{% url 'teachers:update_employee_status' %}",
-                        type: 'POST',
-                        data: {
-                            'employee_id': employeeId,
-                            'status': false,
-                            'voted': true,
-                            'csrfmiddlewaretoken': '{{ csrf_token }}'
-                        },
-                        success: function (response) {
-                            if (response.status === 'success') {
-                                $button.text('Yakunlandi')
-                                    .removeClass('btn-warning')
-                                    .addClass('btn-light')
-                                    .prop('disabled', true);
-                                enableAllButtons();
-                                activeEmployeeId = null;
-                                clearTeacherData();
-                                stopTimer();
+                    disableOtherButtons($button);
+                    activeEmployeeId = employeeId;
+                    modal.show();
+                    startVoteUpdate();
+                    startTimer();
 
-                                if (response.linked_employee_id) {
-                                    const $linkedBtn = $(`.start-btn[data-id="${response.linked_employee_id}"]`);
-                                    if ($linkedBtn.length) {
-                                        $linkedBtn.text('Yakunlandi')
-                                            .removeClass('btn-warning')
-                                            .addClass('btn-light')
-                                            .prop('disabled', true);
-                                    }
-                                }
-                            } else {
-                                $button.prop('disabled', false);
-                                alert('Xatolik yuz berdi: ' + response.message);
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            $button.prop('disabled', false);
-                            alert('Server bilan bog‘lanishda xatolik yuz berdi');
-                            console.error('AJAX error:', error);
+                    if (response.linked_employee_id) {
+                        const $linkedBtn = $(`.start-btn[data-id="${response.linked_employee_id}"]`);
+                        if ($linkedBtn.length) {
+                            $linkedBtn.text('Stop')
+                                .removeClass('btn-success')
+                                .addClass('btn-danger')
+                                .prop('disabled', false);
                         }
-                    });
+                    }
+                } else {
+                    $button.prop('disabled', false);
+                    alert('Xatolik yuz berdi: ' + response.message);
                 }
-            });
+            },
+            error: function (xhr, status, error) {
+                $button.prop('disabled', false);
+                alert('Server bilan bog‘lanishda xatolik yuz berdi');
+                console.error('AJAX error:', error);
+            }
+        });
+    });
 
-            // Boshqa tugmalarni disable qilish
+            function endVotingAutomatically() {
+    if (!activeEmployeeId) return;
+
+    // Oxirgi ma’lumotlarni olish
+    $.ajax({
+        url: "{% url 'teachers:get_vote_data' %}",
+        type: 'GET',
+        data: { 'employee_id': activeEmployeeId },
+        success: function (response) {
+            if (response.status === 'success') {
+                latestVoteData = response;
+                // Holatni yangilash
+                $.ajax({
+                    url: "{% url 'teachers:update_employee_status' %}",
+                    type: 'POST',
+                    data: {
+                        'employee_id': activeEmployeeId,
+                        'status': false,
+                        'voted': true,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (updateResponse) {
+                        if (updateResponse.status === 'success') {
+                            const $button = $(`.start-btn[data-id="${activeEmployeeId}"]`);
+                            $button.text('Yakunlandi')
+                                .removeClass('btn-danger')
+                                .addClass('btn-light')
+                                .prop('disabled', true);
+
+                            if (updateResponse.linked_employee_id) {
+                                const $linkedBtn = $(`.start-btn[data-id="${updateResponse.linked_employee_id}"]`);
+                                if ($linkedBtn.length) {
+                                    $linkedBtn.text('Yakunlandi')
+                                        .removeClass('btn-danger')
+                                        .addClass('btn-light')
+                                        .prop('disabled', true);
+                                }
+                            }
+
+                            enableAllButtons();
+                            activeEmployeeId = null;
+                            stopVoteUpdate();
+                            showFinalData();
+                            updateEmployeeTable();
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Update status error:', error);
+                    }
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Get vote data error:', error);
+        }
+    });
+}
+
             function disableOtherButtons($currentButton) {
                 $('.start-btn').each(function () {
                     const $btn = $(this);
@@ -352,7 +419,6 @@
 
             // Teacher data ni yangilash
             function updateTeacherData(data) {
-                const totalVotes = data.votes[0] + data.votes[1] + data.votes[2];
                 let htmlContent = `
                     <div class="row">
                         <div class="col-6">
@@ -371,7 +437,7 @@
                         </div>
                         <div class="col-6 d-flex justify-content-center align-items-center" id="vote_summary">
                             <div class="text-center" id="show_all_data">
-                                <h1 style="font-size: 58px">${totalVotes}</h1>
+                                <h1 style="font-size: 58px">${data.votes[0] + data.votes[1] + data.votes[2]}</h1>
                                 <h2 class="text-secondary">Nafar kishi ovoz berdi</h2>
                             </div>
                         </div>
@@ -379,7 +445,6 @@
                 `;
 
                 if (data.linked_employee) {
-                    const linkedTotalVotes = data.linked_employee.votes[0] + data.linked_employee.votes[1] + data.linked_employee.votes[2];
                     htmlContent += `
                         <div class="row mt-4">
                             <div class="col-6">
@@ -398,7 +463,7 @@
                             </div>
                             <div class="col-6 d-flex justify-content-center align-items-center" id="linked_vote_summary">
                                 <div class="text-center" id="linked_show_all_data">
-                                    <h1 style="font-size: 58px">${linkedTotalVotes}</h1>
+                                    <h1 style="font-size: 58px">${data.linked_employee.votes[0] + data.linked_employee.votes[1] + data.linked_employee.votes[2]}</h1>
                                     <h2 class="text-secondary">Nafar kishi ovoz berdi</h2>
                                 </div>
                             </div>
@@ -410,80 +475,110 @@
             }
 
             // Yakuniy ma'lumotlarni pie chart bilan ko'rsatish
-            function showFinalData() {
-                if (!latestVoteData) return;
+function showFinalData() {
+    // Ma'lumotlar mavjudligini tekshirish
+    if (!latestVoteData || !latestVoteData.votes) {
+        console.error('Natijalar uchun ma’lumotlar mavjud emas');
+        $('#vote_summary').html('<p>Natijalar mavjud emas</p>');
+        if (latestVoteData.linked_employee) {
+            $('#linked_vote_summary').html('<p>Natijalar mavjud emas</p>');
+        }
+        return;
+    }
 
-                const voteList = [latestVoteData.votes[0], latestVoteData.votes[1], latestVoteData.votes[2]];
-                const linkedVoteList = latestVoteData.linked_employee ?
-                    [latestVoteData.linked_employee.votes[0], latestVoteData.linked_employee.votes[1], latestVoteData.linked_employee.votes[2]] : null;
+    const voteList = [latestVoteData.votes[0], latestVoteData.votes[1], latestVoteData.votes[2]];
+    const $voteSummary = $('#vote_summary');
 
-                const $voteSummary = $('#vote_summary');
-                const $linkedVoteSummary = $('#linked_vote_summary');
+    // Avvalgi chartni o‘chirish
+    $voteSummary.empty();
 
-                let options = {
-                    series: voteList,
-                    chart: {
-                        width: 420,
-                        type: 'pie',
-                    },
-                    labels: ['Qarshi', 'Rozi', 'Betaraf'],
-                    legend: {
-                        position: 'bottom',
-                        fontSize: '20px',
-                    },
-                    plotOptions: {
-                        pie: {
-                            dataLabels: {
-                                offset: -30,
-                            },
-                        }
-                    },
-                    dataLabels: {
-                        enabled: true,
-                        formatter: function (val, opts) {
-                            let total = voteList.reduce((acc, curr) => acc + curr, 0);
-                            let count = voteList[opts.seriesIndex];
-                            return `${count} ta (${val.toFixed(1)}%)`;
-                        },
-                        style: {
-                            fontSize: '18px',
-                            fontWeight: 'bold',
-                            colors: ['#fff']
-                        }
-                    },
-                    responsive: [{
-                        breakpoint: 480,
-                        options: {
-                            chart: {width: 200},
-                            legend: {position: 'bottom'}
-                        }
-                    }]
-                };
-
-                $voteSummary.html(`<div id="chart"></div>`);
-                const chart = new ApexCharts(document.querySelector("#chart"), options);
-                chart.render();
-
-                if (linkedVoteList && $linkedVoteSummary.length) {
-                    let linkedOptions = { ...options, series: linkedVoteList };
-                    linkedOptions.dataLabels.formatter = function (val, opts) {
-                        let total = linkedVoteList.reduce((acc, curr) => acc + curr, 0);
-                        let count = linkedVoteList[opts.seriesIndex];
-                        return `${count} ta (${val.toFixed(1)}%)`;
-                    };
-                    $linkedVoteSummary.html(`<div id="linked_chart"></div>`);
-                    const linkedChart = new ApexCharts(document.querySelector("#linked_chart"), linkedOptions);
-                    linkedChart.render();
-                }
+    let options = {
+        series: voteList,
+        chart: {
+            width: 420,
+            type: 'pie',
+        },
+        labels: ['Qarshi', 'Rozi', 'Betaraf'],
+        legend: {
+            position: 'bottom',
+            fontSize: '20px',
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function (val, opts) {
+                let total = voteList.reduce((acc, curr) => acc + curr, 0);
+                let count = voteList[opts.seriesIndex];
+                return `${count} ta (${val.toFixed(1)}%)`;
+            },
+            style: {
+                fontSize: '18px',
+                fontWeight: 'bold',
+                colors: ['#fff']
             }
+        },
+        responsive: [{
+            breakpoint: 480,
+            options: {
+                chart: {width: 200},
+                legend: {position: 'bottom'}
+            }
+        }]
+    };
+
+    $voteSummary.html(`<div id="chart"></div>`);
+    const chart = new ApexCharts(document.querySelector("#chart"), options);
+    chart.render();
+
+    // Agar bog‘langan xodim uchun ma’lumotlar bo‘lsa
+    if (latestVoteData.linked_employee && latestVoteData.linked_employee.votes) {
+        const linkedVoteList = [latestVoteData.linked_employee.votes[0], latestVoteData.linked_employee.votes[1], latestVoteData.linked_employee.votes[2]];
+        const $linkedVoteSummary = $('#linked_vote_summary');
+        $linkedVoteSummary.empty();
+        let linkedOptions = { ...options, series: linkedVoteList };
+        linkedOptions.dataLabels.formatter = function (val, opts) {
+            let total = linkedVoteList.reduce((acc, curr) => acc + curr, 0);
+            let count = linkedVoteList[opts.seriesIndex];
+            return `${count} ta (${val.toFixed(1)}%)`;
+        };
+        $linkedVoteSummary.html(`<div id="linked_chart"></div>`);
+        const linkedChart = new ApexCharts(document.querySelector("#linked_chart"), linkedOptions);
+        linkedChart.render();
+    }
+}
 
             // Teacher data ni tozalash
             function clearTeacherData() {
                 $('#teacher_data').html('');
             }
 
+            // Modal yopilganda tozalash
+            $('#voteModal').on('hidden.bs.modal', function () {
+                stopTimer();
+                stopVoteUpdate();
+                clearTeacherData();
+                if (activeEmployeeId) {
+                    const $button = $(`.start-btn[data-id="${activeEmployeeId}"]`);
+                    if ($button.text().trim() !== 'Yakunlandi') {
+                        $button.text('Start').removeClass('btn-danger').addClass('btn-success');
+                        enableAllButtons();
+                        activeEmployeeId = null;
+                    }
+                }
+            });
+
             // Sahifa yuklanganda faol holatni tekshirish
             checkActiveEmployee();
         });
+
+        $(document).ready(function () {
+    // Search input hodisasi
+    $('#searchInput').on('keyup', function () {
+        const value = $(this).val().toLowerCase(); // Kiritilgan matnni kichik harflarga o‘zgartirish
+        $('#employee_table tr').filter(function () {
+            const fullName = $(this).find('h3').text().toLowerCase(); // F.I.SH matnini olish va kichik harflarga o‘zgartirish
+            $(this).toggle(fullName.indexOf(value) > -1); // Qidiruv so‘ziga mos qatorlarni ko‘rsatish
+        });
+    });
+});
     </script>
 {% endblock %}

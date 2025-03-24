@@ -207,15 +207,24 @@ def finish_vote(request):
 
 def start(request):
     if request.user.is_authenticated:
-        selected_employees = SelectedEmployee.objects.all().order_by('-created_at').order_by('voted')
-
-        context={
-            'selected_employees': selected_employees
-        }
-        return render(request, 'table.html', context=context)
+        return render(request, 'table.html')
     else:
         return redirect('teachers:home')
 
+
+def get_employee_list(request):
+    # Employeelarni voted=True bo'lganlarni pastga tushirish uchun saralash
+    employees = SelectedEmployee.objects.all().order_by('voted', 'created_at')
+    employee_list = []
+    for employee in employees:
+        employee_list.append({
+            'id': employee.id,
+            'full_name': employee.employee.full_name,
+            'image': employee.employee.image if employee.employee.image else '/static/default.jpg',
+            'voted': employee.voted,
+            'status': employee.status,
+        })
+    return JsonResponse({'employees': employee_list})
 
 @method_decorator(csrf_exempt, name='dispatch')
 class UpdateEmployeeStatusView(View):
@@ -227,14 +236,12 @@ class UpdateEmployeeStatusView(View):
 
             employee = SelectedEmployee.objects.get(id=employee_id)
 
-            # Agar status True bo‘lsa, boshqa faol employeelarni o‘chirish
             if status:
                 SelectedEmployee.objects.exclude(id=employee_id).update(status=False)
 
             employee.status = status
             employee.voted = voted
 
-            # Bog‘langan employee ni faollashtirish/yakunlash
             if employee.linked_employee:
                 employee.linked_employee.status = status
                 employee.linked_employee.voted = voted
