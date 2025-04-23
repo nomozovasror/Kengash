@@ -27,17 +27,34 @@ admin.site.register(VotingTimer)
 # class CandidatesAdmin(admin.ModelAdmin):
 #     raw_id_fields = ['teacher']
 
+@admin.register(Employee)
+class EmployeeAdmin(admin.ModelAdmin):
+    # Define search fields for autocomplete
+    search_fields = ['full_name']
+    # Optional: Display fields in the autocomplete dropdown
+    list_display = ['full_name']
+
+    def get_search_results(self, request, queryset, search_term):
+        # Customize search for autocomplete
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        if request.path == '/admin/autocomplete/':  # Ensure this applies to autocomplete
+            queryset = queryset.filter(full_name__icontains=search_term)
+        return queryset, use_distinct
+
+
 @admin.register(SelectedEmployee)
 class SelectedEmployeeAdmin(admin.ModelAdmin):
     list_display = ['employee', 'type', 'status', 'voted', 'linked_employee']
     list_filter = ['status', 'voted']
     search_fields = ['employee__full_name']
+    # Enable autocomplete for the employee field
+    autocomplete_fields = ['employee', 'linked_employee']  # Include linked_employee if needed
 
-
-
-@admin.register(Employee)
-class EmployeeAdmin(admin.ModelAdmin):
-    search_fields = ['full_name']
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # Optional: Limit the queryset for large datasets
+        if db_field.name in ['employee', 'linked_employee']:
+            kwargs['queryset'] = Employee.objects.all()  # Customize if needed
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 
