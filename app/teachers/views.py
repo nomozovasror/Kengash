@@ -37,7 +37,6 @@ def get_session_id(request):
         request.session['device_id'] = str(uuid.uuid4())
     return request.session['device_id']
 
-@transaction.atomic()
 def update_and_save_employee(request):
     token = os.environ.get('HEMIS_TOKEN')
     headers = {
