@@ -49,6 +49,18 @@ class SelectedEmployeeAdmin(admin.ModelAdmin):
     search_fields = ['employee__full_name']
     # Enable autocomplete for the employee field
     autocomplete_fields = ['employee', 'linked_employee']  # Include linked_employee if needed
+    # Add custom action
+    actions = ['reset_and_delete_votes']
+
+    def reset_and_delete_votes(self, request, queryset):
+        # Delete all related Vote objects
+        Vote.objects.filter(employee__in=queryset).delete()
+        # Reset status and voted to False
+        queryset.update(status=False, voted=False)
+        # Show success message
+        self.message_user(request, "Selected employees' votes have been deleted and their status/voted fields reset to False.")
+
+    reset_and_delete_votes.short_description = "Delete related votes and reset status/voted to False"
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         # Optional: Limit the queryset for large datasets

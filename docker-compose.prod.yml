@@ -27,7 +27,7 @@ services:
   nginx:
     build: ./nginx
     ports:
-      - "2011:80"
+      - "2014:80"
     depends_on:
       - kengash_web
     volumes:
