@@ -148,20 +148,20 @@
             let voteUpdateInterval = null;
             let latestVoteData = null;
             let timerInterval = null;
-            let timeLeft = 30;
+            let timeLeft = 15;
             const modal = new bootstrap.Modal(document.getElementById('voteModal'));
             const timerSound = new Audio('{% static "timer_sound.mp3" %}');
 
             // Timer funksiyasi
             function startTimer() {
                 if (timerInterval) return;
-                timeLeft = 30;
+                timeLeft = 15;
                 $('#timer').text(`${timeLeft}`).removeClass('timer-warning');
                 timerSound.play();
                 timerInterval = setInterval(() => {
                     timeLeft--;
                     $('#timer').text(`${timeLeft}`);
-                    if (timeLeft <= 10) {
+                    if (timeLeft <= 5) {
                         $('#timer').addClass('timer-warning');
                     } else {
                         $('#timer').removeClass('timer-warning');
